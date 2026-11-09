@@ -484,7 +484,7 @@ function rendreCourses() {
 }
 
 function rendreProfil() {
-  const materiels = ["four", "poele", "casserole", "cocotte", "sauteuse", "wok", "mixeur", "cuit_vapeur", "gril", "plancha", "saladier"];
+  const materiels = ["four", "poele", "casserole", "cocotte", "sauteuse", "wok", "mixeur", "cuit_vapeur", "gril", "plancha", "saladier", "raclette"];
   $("#vue-profil").innerHTML = `<div class="carte">
     <h2>Foyer</h2>
     <p class="note">Ces réglages restent enregistrés sur cet appareil uniquement (pas de compte, pas de synchronisation entre appareils). Allergies et aliments à éviter : onglet Semaine, avant de générer. Les profils types utilisés alternent homme 70 kg / femme 60 kg ; leur moyenne ne représente pas les besoins personnels du foyer (âge, grossesse, santé non pris en compte).</p>
@@ -495,7 +495,7 @@ function rendreProfil() {
     <div class="champ"><label for="budget">Budget cible des 7 dîners (€)</label>
       <input type="number" id="budget" min="20" max="300" value="${profil.budget}"></div>
     <div class="champ"><label>Matériel de cuisine disponible</label><div class="coches" id="cochesMat">
-      ${materiels.map(m => `<label><input type="checkbox" value="${m}" ${profil.materiel.includes(m) ? "checked" : ""}> ${m.replace("_", " ")}</label>`).join("")}</div></div>
+      ${materiels.map(m => `<label><input type="checkbox" value="${m}" ${profil.materiel.includes(m) ? "checked" : ""}> ${m === "raclette" ? "appareil à raclette" : m.replace("_", " ")}</label>`).join("")}</div></div>
     <button class="petit principal" id="sauverProfil">Enregistrer et régénérer la semaine</button>
   </div>`;
   $("#sauverProfil").addEventListener("click", () => {
