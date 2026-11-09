@@ -19,7 +19,7 @@ const TOUTES = Object.values(SETS).flat();
 const ING = globalThis.INGREDIENTS;
 
 test("au moins 150 recettes", TOUTES.length >= 150, TOUTES.length + " recettes");
-test("200 recettes présentes", TOUTES.length === 200, TOUTES.length);
+test("300 recettes présentes", TOUTES.length === 300, TOUTES.length);
 const ids = new Set(TOUTES.map(r => r.i));
 test("identifiants uniques", ids.size === TOUTES.length);
 

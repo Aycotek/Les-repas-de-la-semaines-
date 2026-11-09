@@ -80,13 +80,13 @@ button{font:inherit;min-height:44px;cursor:pointer}
 .liste-repas{display:grid;gap:12px}
 .repas{padding:0;overflow:hidden;display:grid;grid-template-columns:1fr}
 .repas .visuel{position:relative;aspect-ratio:360/216;max-height:230px;overflow:hidden;background:var(--beige-2)}
-.repas .visuel svg{display:block;width:100%;height:100%;object-fit:cover}
+.repas .visuel :is(svg,img){display:block;width:100%;height:100%;object-fit:cover}
 .etiquette{position:absolute;left:10px;bottom:8px;font-size:.66rem;background:rgba(255,250,243,.8);color:var(--doux);border-radius:999px;padding:2px 9px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .repas .corps{padding:14px 16px 6px}
 .repas .detail{margin:0 16px 14px}
 .repas.conflit{outline:2px solid #d98b84}
 .anime .repas{animation:monte .6s var(--ease) both;animation-delay:calc(var(--i)*70ms)}
-.anime .repas .visuel svg{animation:assiette .8s var(--ease) both;animation-delay:calc(var(--i)*70ms)}
+.anime .repas .visuel :is(svg,img){animation:assiette .8s var(--ease) both;animation-delay:calc(var(--i)*70ms)}
 @keyframes monte{from{opacity:0;transform:translateY(22px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes assiette{from{transform:scale(1.12) rotate(-3deg)}to{transform:none}}
 .vapeur path{animation:vapeur 3.2s ease-in-out infinite;stroke-dasharray:60;transform-origin:center}
@@ -157,7 +157,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
  .hero h2{font-size:2rem}
  .repas{grid-template-columns:300px 1fr;grid-template-rows:auto auto}
  .repas .visuel{grid-row:1/3;max-height:none;aspect-ratio:auto;height:100%;min-height:240px}
- .repas .visuel svg{height:100%}
+ .repas .visuel :is(svg,img){height:100%}
  .repas .detail{grid-column:2}
  main{padding:14px 16px 24px}
 }
@@ -173,3 +173,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 }
 
 #vue-profil .note{margin-bottom:14px}
+
+/* Une quantité d’achat longue reste lisible à 320 px. */
+.ligne-course{align-items:flex-start;flex-wrap:wrap}.ligne-course label{flex:1 1 180px;min-width:0}.ligne-course .qte{white-space:normal;overflow-wrap:anywhere;flex:0 1 340px;line-height:1.5}.note-achat{display:block;font-size:.76rem;margin-top:3px}
+@media(max-width:600px){.ligne-course .qte{flex-basis:100%;padding-left:32px}.detail li{overflow-wrap:anywhere}}

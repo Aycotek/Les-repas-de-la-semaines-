@@ -10,12 +10,12 @@ const RECETTES = [].concat(
   globalThis.RECIPES_ETE, globalThis.RECIPES_AUTOMNE, globalThis.RECIPES_ANNEE);
 const ING = globalThis.INGREDIENTS;
 const REF = globalThis.REFERENCES;
-const contientLegumineuses = r => r.ing.some(([k,g])=>/^(lentille|pois_chiche|pois_casse|haricots_blancs|haricots_rouges|feve)/.test(k) && g>=100);
+const contientLegumineuses = r => r.ing.some(([k,g])=>/^(lentille|pois_chiche|pois_casse|haricots_blancs|haricots_rouges|feve|flageolets)/.test(k) && g>=100);
 const RECETTE_PAR_ID = Object.assign(Object.create(null),Object.fromEntries(RECETTES.map(r => [r.i, r])));
 
 // Ingrédients comptés dans les limites PNNS (par clé d'ingrédient)
 const VIANDE_ROUGE = k => /^(boeuf|veau|agneau|cote_agneau|porc|saucisse_toulouse|merguez)/.test(k);
-const CHARCUTERIE = k => /^(lardons|jambon_|saucisse_fumee|saucisse_toulouse|merguez)/.test(k);
+const CHARCUTERIE = k => /^(lardons|jambon_|saucisse_fumee|saucisse_toulouse|merguez|poitrine_demi_sel)/.test(k);
 const POISSON_GRAS = k => /^(saumon|maquereau|sardine|hareng|truite)/.test(k);
 
 const NUTRIMENTS = [
@@ -80,6 +80,37 @@ function nutrimentsRecette(r) {
   }
   return { t, manquants, absents };
 }
+/* Les rendements servent seulement à afficher le poids à acheter.
+   Les quantités et prixKg du moteur restent exprimés en partie comestible.
+   Sources et hypothèses : REVUE-CORRECTIONS.md, lot corrigé v4. */
+const ACHATS = {
+ moule: {rendement:0.30, produit:"moules en coquille", partie:"chair", prixAchatKg:5},
+ veau_jarret: {rendement:0.70, produit:"rondelles avec os", partie:"chair", prixAchatKg:14},
+ palourdes: {rendement:0.25, produit:"palourdes en coquille", partie:"chair", prixAchatKg:14}
+};
+function poidsTexte(g) { return g>=1000 ? (g/1000).toLocaleString("fr-FR",{maximumFractionDigits:2})+" kg" : g.toLocaleString("fr-FR",{maximumFractionDigits:2})+" g"; }
+function quantiteIngredient(k,g) {
+ const a=ACHATS[k];
+ if(!a)return poidsTexte(g);
+ return `≈ ${poidsTexte(g/a.rendement)} à acheter (${a.produit}) ; ${poidsTexte(g)} de ${a.partie} pour le calcul nutritionnel`;
+}
+function etapeAffichee(r,e) {
+ // Adapter les rappels d'achat dans les étapes, sans changer la recette source.
+ const q=profil.portionsParRecette/4;
+ if(r.i==="h49")e=e.replace("1 kg en rondelles pour 700 g de chair",`${poidsTexte(1000*q)} en rondelles pour ${poidsTexte(700*q)} de chair`);
+ if(r.i==="t42")e=e.replace("800 g en coquille, soit 200 g de chair",`${poidsTexte(800*q)} en coquille, soit ${poidsTexte(200*q)} de chair`);
+ if(r.ing.some(([k])=>k==="moule")){
+  const chair=r.ing.find(([k])=>k==="moule")[1]*q;
+  // Les étapes v4 portent toutes une parenthèse chair et un rappel achat.
+  e=e.replace(/(?:2 kg|1,6 kg|800 g) de moules en coquille \(≈(?:600|480|240) g de chair\)/g,`${poidsTexte(chair/.3)} de moules en coquille (≈${poidsTexte(chair)} de chair)`);
+  e=e.replace(/les moules en coquille \(800 g, ≈240 g de chair\)/g,`les moules en coquille (${poidsTexte(chair/.3)}, ≈${poidsTexte(chair)} de chair)`);
+ }
+ return e;
+}
+function noteAchat(k) {
+ const a=ACHATS[k];if(!a)return "";
+ return `Rendement estimé à ${Math.round(a.rendement*100)} % ; prix indicatif ≈ ${a.prixAchatKg} €/kg acheté. Le poids réel de chair peut varier.`;
+}
 function coutRecette(r) {
   let c = 0;
   for (const [k, g] of r.ing) { const ing = ING[k]; if (ing) c += ing.prixKg * g / 1000; }
@@ -131,7 +162,7 @@ function scorePlan(ids,mois=moisSemaine()) {
     for (const [cle] of NUTRIMENTS) tot[cle] += t[cle] * profil.portionsParRecette / 4;
   }
   // PNNS (occasions de consommation = recette × 2 portions/pers : dîner + restes)
-  s -= 40 * Math.abs(poisson - 2);            // 2 dîners poisson => 4 occasions/pers (repère : 2)
+  s -= 150 * Math.abs(poisson - 2);            // 2 dîners poisson => 4 occasions/pers (repère : 2)
   if (gras < 1) s -= 35;
   s -= 35 * Math.max(0, 2 - legum);
   s -= Math.max(0, viandeG - REF.reperes.viandeRouge_g_max_par_semaine) * 10;
@@ -309,6 +340,11 @@ const fmt = (v, u) => v == null ? "—" : (v >= 100 ? Math.round(v) : Math.round
 const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const eur = v => v.toFixed(2).replace(".", ",") + " €";
 
+function visuelPlat(r,idx) {
+ const src=globalThis.DESSINS_PLATS && globalThis.DESSINS_PLATS[r.i];
+ if(src)return `<img src="${esc(src)}" width="1080" height="648" loading="${idx<2?'eager':'lazy'}" decoding="async" alt="Dessin illustratif : ${esc(r.n)}">`;
+ return globalThis.illustrationPlat ? illustrationPlat(r) : "";
+}
 function rendreSemaine() {
   const mois = moisSemaine();
   const classeAnim = animer ? " anime" : ""; animer = false;
@@ -322,7 +358,7 @@ function rendreSemaine() {
     const al = (globalThis.allergenesDe ? allergenesDe(r.ing) : {c:[],p:[]}), nomAl = id => (globalThis.ALLERGENES.find(a=>a.id===id)||{nom:id}).nom;
     const conflit = estExclue(r, profil.exclusions);
     return `<div class="carte repas ${conflit?"conflit":""}" data-id="${id}" style="--i:${idx}">
-      <div class="visuel">${globalThis.illustrationPlat ? illustrationPlat(r) : ""}<span class="etiquette">Dessin illustratif</span></div>
+      <div class="visuel">${visuelPlat(r,idx)}<span class="etiquette">Dessin illustratif</span></div>
       <div class="corps">
       <p class="jour">${dateDiner.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"short"})} · dîner</p><div class="repas-tete"><h2>${esc(r.n)}</h2></div>
       ${conflit ? `<p class="alerte-carte" role="alert">Ne convient plus à tes choix : génère la semaine pour le remplacer.</p>` : ""}
@@ -339,9 +375,9 @@ function rendreSemaine() {
       <div class="detail masque">
         ${(al.c.length||al.p.length) ? `<p class="note"><strong>Allergènes (liste UE) :</strong> ${al.c.length?"contient "+al.c.map(nomAl).join(", "):"aucun certain"}${al.p.length?" · possible selon les marques (produits transformés, à vérifier sur l'étiquette) : "+al.p.map(nomAl).join(", "):""}. Traces et contamination croisée non couvertes.</p>` : `<p class="note">Aucun allergène UE identifié dans les ingrédients du catalogue (traces et produits industriels non vérifiables).</p>`}
         <h3>Ingrédients (${profil.portionsParRecette} portions)</h3>
-        <ul>${r.ing.map(([k, g]) => { const ing = ING[k]; return ing ? `<li>${ing.nom} — ${Math.round(g * profil.portionsParRecette / 4)} g</li>` : ""; }).join("")}</ul>
-        <p class="note">~${eur(coutRecette(r)*profil.portionsParRecette/4)} pour la recette · ~${Math.round(nutrimentsRecette(r).t.kcal/4)} kcal/portion (estimation, données partielles possibles)</p><p class="note">Correspondances CIQUAL approximatives ou absentes (non chiffrées si absentes) : ${r.ing.filter(([k])=>ING[k].correspondance!=="directe").map(([k])=>esc(ING[k].nom)).join(", ")||"aucune signalée"}. Quantités : poids comestibles, hors os/coquilles ; conserver la mention du produit.</p><h3>Préparation</h3>
-        <ul>${(r.et || []).map(e => `<li>${e}</li>`).join("")}</ul>
+        <ul>${r.ing.map(([k, g]) => { const ing = ING[k]; return ing ? `<li>${ing.nom} — ${esc(quantiteIngredient(k,g * profil.portionsParRecette / 4))}${ACHATS[k]?`<small class="note note-achat">${esc(noteAchat(k))}</small>`:""}</li>` : ""; }).join("")}</ul>
+        <p class="note">~${eur(coutRecette(r)*profil.portionsParRecette/4)} pour la recette · ~${Math.round(nutrimentsRecette(r).t.kcal/4)} kcal/portion (estimation, données partielles possibles)</p><p class="note">Correspondances CIQUAL approximatives ou absentes (non chiffrées si absentes) : ${r.ing.filter(([k])=>ING[k].correspondance!=="directe").map(([k])=>esc(ING[k].nom)).join(", ")||"aucune signalée"}. Les calculs utilisent les poids comestibles. Quand un rendement est indiqué, le poids à acheter avec os ou coquilles est affiché séparément. Rendements estimés et pertes de cuisson non modélisées ; certains produits entiers du catalogue restent approximatifs.</p><h3>Préparation</h3>
+        <ul>${(r.et || []).map(e => `<li>${esc(etapeAffichee(r,e))}</li>`).join("")}</ul>
       </div>
     </div>`;
   }).join("");
@@ -427,14 +463,14 @@ function rendreCourses() {
   for (const r of ordre) {
     if (!rayons[r]) continue;
     html += `<h3 class="rayon-titre">${noms[r]}</h3>` + rayons[r].sort((a, b) => a[1].nom.localeCompare(b[1].nom))
-      .map(([k, v]) => `<div class="ligne-course ${coches.includes(k)?"barree":""}" data-cle="${k}"><label><input type="checkbox" data-course="${k}" ${coches.includes(k)?"checked":""}> ${v.nom}</label><span class="qte">${v.g >= 1000 ? (v.g / 1000).toFixed(2).replace(".", ",") + " kg" : Math.round(v.g) + " g"} · ~${eur(v.prix)}</span></div>`).join("");
+      .map(([k, v]) => `<div class="ligne-course ${coches.includes(k)?"barree":""}" data-cle="${k}"><label><input type="checkbox" data-course="${k}" ${coches.includes(k)?"checked":""}> ${v.nom}</label><span class="qte">${esc(quantiteIngredient(k,v.g))} · ~${eur(v.prix)}${ACHATS[k]?`<small class="note note-achat">${esc(noteAchat(k))}</small>`:""}</span></div>`).join("");
   }
   const manuels = coursesManuelles();
   if (manuels.length) html += `<h3 class="rayon-titre">${noms.manuel}</h3>` + manuels.map((m, i) =>
     `<div class="ligne-course"><span>${esc(m)}</span><button class="petit" data-act="supprManuel" data-idx="${i}">Retirer</button></div>`).join("");
   $("#vue-courses").innerHTML = `<div class="carte">
     <h2>Liste de courses — semaine du ${semaine.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}</h2>
-    <p class="note">Nouvelle liste distincte pour chaque semaine (les anciennes restent consultables), regroupée par rayon. Quantités pour ${profil.portionsParRecette} portions par recette. Les prix sont des hypothèses indicatives (pas relevés en magasin ; les conditionnements réels peuvent faire varier le total).</p>
+    <p class="note">Nouvelle liste distincte pour chaque semaine (les anciennes restent consultables), regroupée par rayon. Quantités pour ${profil.portionsParRecette} portions par recette. Pour les produits avec os ou coquilles, le poids d’achat estimé est distingué de la chair utilisée au bilan. Les prix sont des hypothèses indicatives (pas relevés en magasin ; les conditionnements réels peuvent faire varier le total).</p>
     ${html}
     <p class="total-courses">Total estimé des menus et compléments choisis : ${eur(total)}<br><small class="note">Articles manuels non chiffrés et hors bilan nutritionnel.</small></p>
     <form class="ajout" id="formAjout"><label class="sr-only" for="ajoutTxt">Article manuel</label><input id="ajoutTxt" maxlength="200" placeholder="Ajouter un article (ex. café, papier cuisson)…" required><button>Ajouter</button></form>
@@ -560,7 +596,7 @@ function rendreTout() {
  if (focusApres) { const f = document.querySelector(focusApres); focusApres = ""; if (f && f.focus) f.focus(); }
  if(!stockageDisponible) $("#vue-semaine").innerHTML = '<p role="alert" class="alternatives">Stockage local indisponible : tes changements peuvent être perdus à la fermeture.</p>'+$("#vue-semaine").innerHTML;
 }
-if(typeof module!=="undefined" && module.exports) module.exports={formeCulinaire,complements,coutComplements,contientLegumineuses,RECETTES,ING,scorePlan,genererPlan,relancerRepas,listeCourses,nutrimentsRecette,bilanPlan,rnpHebdoFoyer,estExclue,poolDuMois,lundiDe,isoSemaine,cleSemaine,idsComplets,coursesManuelles,repasManuels,chargerPlan,chargerProfil,rendreTout,activerVue,getProfil:()=>profil,setProfil:p=>{profil=p;},getPlan:()=>plan,setPlan:p=>{plan=p;},setSemaine:d=>{semaine=lundiDe(d);}};
+if(typeof module!=="undefined" && module.exports) module.exports={etapeAffichee,formeCulinaire,complements,coutComplements,contientLegumineuses,RECETTES,ING,scorePlan,genererPlan,relancerRepas,listeCourses,nutrimentsRecette,bilanPlan,rnpHebdoFoyer,estExclue,poolDuMois,lundiDe,isoSemaine,cleSemaine,idsComplets,coursesManuelles,repasManuels,chargerPlan,chargerProfil,rendreTout,activerVue,getProfil:()=>profil,setProfil:p=>{profil=p;},getPlan:()=>plan,setPlan:p=>{plan=p;},setSemaine:d=>{semaine=lundiDe(d);}};
 rendreTout();
 if (typeof navigator!=="undefined" && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 })();

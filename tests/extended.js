@@ -10,6 +10,7 @@ for(const f of ['allergenes','illustrations'])vm.runInContext(fs.readFileSync(pa
 vm.runInContext(fs.readFileSync(path.join(root,'app.js'),'utf8'),ctx);
 const a=ctx.module.exports,by=Object.fromEntries(a.RECETTES.map(r=>[r.i,r])),base=JSON.parse(JSON.stringify(a.getProfil()));let n=0;
 const test=(name,fn)=>{try{fn();n++;}catch(e){console.error('FAIL',name,e.message);process.exitCode=1;}};
+test('p21 catégorie veau et t36 riz complet',()=>{for(const id of ['p21','h02','p03','a03'])assert.equal(by[id].t,'viande');assert.equal(by.t36.n,'Poisson au curry vert et riz complet');assert.ok(by.t36.ing.some(([k])=>k==='riz_basmati_complet'));});
 const near=(x,y)=>assert.ok(Math.abs(x-y)<1e-7,`${x} != ${y}`);
 for(let month=1;month<=12;month++)for(let seed=1;seed<=5;seed++){
  const p=a.genererPlan(month,seed);a.setPlan(p);
