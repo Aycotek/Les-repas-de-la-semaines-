@@ -17,7 +17,7 @@ globalThis.ALLERGENES = [
   {id:"sesame", nom:"Sésame", ex:"graines, tahini, huile"},
   {id:"celeri", nom:"Céleri", ex:"céleri-rave, bouillon, bouquet garni"},
   {id:"moutarde", nom:"Moutarde", ex:"moutarde, certains currys"},
-  {id:"sulfites", nom:"Sulfites", ex:"vin, vinaigre balsamique, fruits secs"},
+  {id:"sulfites", nom:"Sulfites", ex:"vin, vinaigres, fruits secs"},
   {id:"lupin", nom:"Lupin", ex:"aucun ingrédient du catalogue actuel"}
 ];
 (function(){
@@ -33,9 +33,9 @@ globalThis.ALLERGENES = [
  c("farine farine_ble_complet chapelure_complete pate_brisee pate_feuilletee pate_a_pain vol_au_vent tortilla_ble_complet pain_burger_complet pain_complet pain_pita_complet naan_complet boulgour_complet epeautre orge_monde semoule_complete nouilles_ble vermicelle pates_completes spaghetti_complets tagliatelle_complete lasagne_feuille crozets sauce_soja curry_japonais pate_miso",["gluten"]);
  c("tofu_ferme germes_soja sauce_soja pate_miso curry_japonais",["soja"]);
  c("sesame_graines tahini huile_sesame",["sesame"]);
- c("celeri_boule bouillon_legumes bouquet_garni curry_japonais",["celeri"]);
+ c("celeri_boule bouillon_legumes curry_japonais",["celeri"]);
  c("moutarde cornichon",["moutarde"]);
- c("vin_blanc vin_rouge vinaigre_balsamique cidre_brut raisin_sec",["sulfites"]);
+ c("vin_blanc vin_rouge vinaigre vinaigre_balsamique cidre_brut raisin_sec",["sulfites"]);
  c("curry_japonais",["lait"]);
  p("merguez saucisse_toulouse saucisse_fumee porc_hache jambon_blanc",["gluten","lait","soja","celeri","moutarde"]);
  p("lardons jambon_cru poulet_fume",["lait","soja"]);
@@ -52,7 +52,7 @@ globalThis.ALLERGENES = [
  p("lait_de_coco",[]);
  globalThis.ALLERGENES_ING=A;
  /* Ingrédients passés en revue sans allergène UE connu (liste exhaustive vérifiée par les tests : tout nouvel ingrédient doit être classé). */
- globalThis.SANS_ALLERGENE=("agneau_epaule ail aneth artichaut asperge asperge_blanche aubergine avocat basilic betterave_cuite boeuf_a_bouillir boeuf_a_poeler boeuf_hache_5pct brocoli butternut cardon carotte cepe champignon_de_paris chou_de_bruxelles chou_fleur chou_kale chou_rouge chou_vert ciboulette citron citron_vert concombre confit_canard coriandre cote_agneau courge courgette echalote endive epinards_frais escalope_dinde fenouil feve_ecossee filet_poulet gingembre girolle haricot_vert haut_de_cuisse_poulet laitue laitue_romaine mache mangue melon menthe moelle_os navet oignon oignon_nouveau oignon_rouge orange ortie_feuille oseille panais patate_douce peche persil petit_pois pintade poireau poivron pomme pomme_de_terre pomme_de_terre_nouvelle porc_filet_mignon potiron poulet_fermier radis radis_avec_fanes raisin rhubarbe romarin roquette salade_verte sauge thym tomate topinambour veau_epaule veau_hache veau_roti kiwi fraise chataigne_cuite cumin curcuma galette_riz huile_olive lentilles_corail lentilles_vertes levure_boulanger mais miel muscade nouilles_riz origan paprika pois_casses poivre safran sel sucre vinaigre eau quinoa riz_arborio riz_basmati_complet riz_complet vermicelle_riz tomate_concassee haricots_blancs_boite haricots_rouges_boite pois_chiches_boite artichaut_conserve olive_noire capres lait_de_coco pak_choi").split(" ");
+ globalThis.SANS_ALLERGENE=("agneau_epaule ail aneth artichaut bouquet_garni asperge asperge_blanche aubergine avocat basilic betterave_cuite boeuf_a_bouillir boeuf_a_poeler boeuf_hache_5pct brocoli butternut cardon carotte cepe champignon_de_paris chou_de_bruxelles chou_fleur chou_kale chou_rouge chou_vert ciboulette citron citron_vert concombre confit_canard coriandre cote_agneau courge courgette echalote endive epinards_frais escalope_dinde fenouil feve_ecossee filet_poulet gingembre girolle haricot_vert haut_de_cuisse_poulet laitue laitue_romaine mache mangue melon menthe moelle_os navet oignon oignon_nouveau oignon_rouge orange ortie_feuille oseille panais patate_douce peche persil petit_pois pintade poireau poivron pomme pomme_de_terre pomme_de_terre_nouvelle porc_filet_mignon potiron poulet_fermier radis radis_avec_fanes raisin rhubarbe romarin roquette salade_verte sauge thym tomate topinambour veau_epaule veau_hache veau_roti kiwi fraise chataigne_cuite cumin curcuma galette_riz huile_olive lentilles_corail lentilles_vertes levure_boulanger mais miel muscade nouilles_riz origan paprika pois_casses poivre safran sel sucre vinaigre eau quinoa riz_arborio riz_basmati_complet riz_complet vermicelle_riz tomate_concassee haricots_blancs_boite haricots_rouges_boite pois_chiches_boite artichaut_conserve olive_noire capres lait_de_coco pak_choi").split(" ");
  const T=k=>[...(A[k]?.c||[]),...(A[k]?.p||[])];
  /* allergènes d'une liste d'ingrédients [[clé,g]] : {c:[...], p:[...]} sans doublon */
  globalThis.allergenesDe=function(ings){const c=new Set(),p=new Set();for(const [k] of ings){const a=A[k];if(!a)continue;a.c.forEach(x=>c.add(x));a.p.forEach(x=>p.add(x));}p.forEach(x=>{if(c.has(x))p.delete(x);});return {c:[...c],p:[...p]};};
