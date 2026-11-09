@@ -1,0 +1,14 @@
+{
+  "name": "Les repas de la semaine",
+  "short_name": "Repas semaine",
+  "description": "Planificateur de repas hebdomadaires : nutrition ANSES/PNNS, saison, budget, liste de courses.",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#2e7d32",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
