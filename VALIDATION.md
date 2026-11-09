@@ -105,3 +105,5 @@ Périmètre : même produit, mêmes données. Ajouts : `allergenes.js`, `illustr
 **Design.** Beige et bordeaux, matières en verre dépoli avec repli opaque, animations courtes coupées par `prefers-reduced-motion`.
 
 Contrôles de la révision 3 : 20 +585 +138 +717 assertions (1 460 au total) (dont allergènes, illustrations, compléments, régressions œuf-bœuf et lait-laitue), 55 parcours navigateur, 24 contrôles sécurité. Ce sont des tests automatiques, pas des retours d'utilisateurs réels.
+
+**Révision images et raclette (9 nov. 2026).** Raclette (a53) : titre sans « four », préparation à l'appareil à raclette, équipement « appareil à raclette » (case dans Foyer, coché par défaut ; anciens réglages sans version : ajouté une seule fois puis décochable, sans écraser un choix enregistré). 88 dessins repris pour des assiettes plus fournies : cadrage plus serré, éléments plus grands, et pour 15 plats la présentation de deux portions au lieu d'une. Aucun ingrédient, quantité ou donnée nutritionnelle modifié. Dessins toujours programmés, non génératifs. Cache SW v10.
