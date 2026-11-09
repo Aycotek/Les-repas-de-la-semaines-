@@ -7,23 +7,23 @@ const rng=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.i
 const f=n=>Math.round(n*10)/10;
 /* catégorie visuelle d'un ingrédient : [cat, libellé] ; null = non dessiné (assaisonnement, liquide, farine…) */
 const REGLES=[
- [/^(boeuf|veau|agneau|cote_agneau|merguez|moelle)/,"viande"],[/^(poulet|filet_poulet|haut_de_cuisse|escalope_dinde|pintade|confit_canard)/,"volaille"],
- [/^(porc_|jambon_|lardons|saucisse_)/,"porc"],[/^(saumon|rouget|truite|thon_frais)/,"poisson_rose"],
- [/^(cabillaud|colin|lieu_jaune|loup|merlan|merlu|morue|raie|maquereau|sardine|hareng|thon_boite)/,"poisson"],
- [/^crevette/,"crevette"],[/^(crabe|encornet|poulpe|seiche)/,"anneau"],[/^moule/,"moule"],[/^oeuf/,"oeuf"],
- [/^(comte|gruyere|beaufort|cheddar|parmesan|pecorino|reblochon|mozzarella|burrata|feta|bleu|chevre|ricotta)/,"fromage"],
+ [/^(boeuf|veau|agneau|cote_agneau|merguez|moelle|lapin)/,"viande"],[/^(poulet|filet_poulet|haut_de_cuisse|escalope_dinde|pintade|confit_canard|magret)/,"volaille"],
+ [/^(porc_|jambon_|lardons|saucisse_|poitrine_)/,"porc"],[/^(saumon|rouget|truite|thon_frais)/,"poisson_rose"],
+ [/^(cabillaud|colin|lieu_jaune|loup|merlan|merlu|morue|raie|maquereau|sardine|hareng|thon_boite|sole)/,"poisson"],
+ [/^crevette/,"crevette"],[/^(crabe|encornet|poulpe|seiche)/,"anneau"],[/^(moule|palourde)/,"moule"],[/^oeuf/,"oeuf"],
+ [/^(comte|gruyere|beaufort|cheddar|parmesan|pecorino|reblochon|mozzarella|burrata|feta|bleu|chevre|ricotta|raclette|tomme)/,"fromage"],
  [/^(riz|boulgour|semoule|quinoa|epeautre|orge|polenta)/,"grain"],[/^(pates|spaghetti|tagliatelle|nouilles|vermicelle|crozets|lasagne)/,"pate"],
- [/^(pomme_de_terre|topinambour|panais|navet|celeri_boule)/,"cube"],[/^(lentille|pois_chiches|pois_casses|haricots_|feve|mais)/,"legumineuse"],
+ [/^(pomme_de_terre|topinambour|panais|navet|celeri_boule)/,"cube"],[/^(lentille|pois_chiches|pois_casses|haricots_|feve|mais|flageolets)/,"legumineuse"],
  [/^(carotte|butternut|courge|potiron|patate_douce|orange)/,"orange"],[/^(tomate|poivron|betterave|chou_rouge|radis|fraise)/,"rouge"],
- [/^(brocoli|haricot_vert|epinards|chou_kale|chou_vert|chou_de_bruxelles|courgette|asperge|petit_pois|laitue|roquette|mache|salade|pak_choi|concombre|artichaut|oseille|ortie|cardon|fenouil|endive|avocat)/,"vert"],
+ [/^(brocoli|haricot_vert|epinards|chou_kale|chou_vert|choucroute|blette|chou_de_bruxelles|courgette|asperge|petit_pois|laitue|roquette|mache|salade|pak_choi|concombre|artichaut|oseille|ortie|cardon|fenouil|endive|avocat)/,"vert"],
  [/^(champignon|cepe|girolle)/,"champignon"],[/^chou_fleur/,"chou_fleur"],[/^(oignon|echalote|poireau)/,"oignon"],[/^aubergine/,"aubergine"],
- [/^(pomme$|peche|mangue|melon|raisin$|kiwi|rhubarbe)/,"fruit"],[/^(pain_|naan|tortilla|vol_au_vent|pate_)/,"pain"],[/^tofu/,"tofu"]
+ [/^(pomme$|peche|mangue|melon|raisin$|kiwi|rhubarbe|poire|pruneau)/,"fruit"],[/^(pain_|naan|tortilla|vol_au_vent|pate_)/,"pain"],[/^tofu/,"tofu"]
 ];
 const HERBES=/^(persil|basilic|ciboulette|coriandre|aneth|menthe|thym|romarin|sauge)/;
 const SOUPE=/soupe|velouté|bouillon|minestrone|dahl|curry|ramen|potage|chili|ragoût|blanquette|pot-au-feu|tajine/i;
 function elements(r){
  const m=new Map();
- for(const [k,g] of r.ing){let cat=null;for(const [re,c] of REGLES)if(re.test(k)){cat=c;break;}if(cat&&cat!=="pain")m.set(cat,(m.get(cat)||0)+g);}
+ for(const [k,g] of r.ing){if(k==="oeuf"&&r.t!=="oeufs"&&!/œufs? (mollets?|pochés?|au plat|cocotte|durs?|brouillés?)|niçoise|ramen|shakshuka|florentine|sur rosti/i.test(r.n))continue;let cat=null;for(const [re,c] of REGLES)if(re.test(k)){cat=c;break;}if(k==="oeuf"&&r.t==="oeufs"&&/omelette|tortilla|frittata|piperade|brouillés/i.test(r.n))cat="oeuf_battu";if(cat&&cat!=="pain")m.set(cat,(m.get(cat)||0)+g);}
  const tri=[...m].sort((a,b)=>b[1]-a[1]).slice(0,5).map(x=>x[0]);
  return tri;
 }
@@ -31,6 +31,7 @@ function fond(cats){
  if(cats.includes("orange"))return"#e0913b";if(cats.includes("rouge"))return"#c5543a";if(cats.includes("legumineuse"))return"#a9763f";if(cats.includes("vert"))return"#9fb36a";return"#e9d5a8";
 }
 const P={
+ oeuf_battu:(x,y,s,R)=>`<g data-forme="oeuf-battu" transform="rotate(${f(R()*60-30)} ${f(x)} ${f(y)})"><path d="M${f(x-s*1.3)} ${f(y)}q${f(s*.3)} ${f(-s)} ${f(s*1.5)} ${f(-s*.8)}q${f(s*.7)} ${f(s*.3)} ${f(s*.9)} ${f(s*.9)}q${f(-s*.6)} ${f(s*.9)} ${f(-s*1.5)} ${f(s*.7)}q${f(-s*.8)} ${f(s*.1)} ${f(-s*.9)} ${f(-s*.8)}z" fill="#e9c56b"/><path d="M${f(x-s)} ${f(y)}q${f(s)} ${f(-s*.4)} ${f(s*1.7)} ${f(s*.1)}" stroke="#f6df95" stroke-width="2" fill="none"/></g>`,
  viande:(x,y,s,R,id)=>`<rect x="${f(x-s)}" y="${f(y-s*.8)}" width="${f(s*2)}" height="${f(s*1.6)}" rx="${f(s*.45)}" fill="#8f3f31" transform="rotate(${f(R()*80-40)} ${f(x)} ${f(y)})"/><rect x="${f(x-s*.7)}" y="${f(y-s*.6)}" width="${f(s*1.1)}" height="${f(s*.5)}" rx="${f(s*.25)}" fill="#b96a52" opacity=".7" transform="rotate(${f(R()*80-40)} ${f(x)} ${f(y)})"/>`,
  volaille:(x,y,s,R)=>`<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(s*1.15)}" ry="${f(s*.8)}" fill="#d8a45f" transform="rotate(${f(R()*180)} ${f(x)} ${f(y)})"/><ellipse cx="${f(x-s*.2)}" cy="${f(y-s*.2)}" rx="${f(s*.6)}" ry="${f(s*.3)}" fill="#f0cd92" opacity=".8"/>`,
  porc:(x,y,s,R)=>`<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(s*1.1)}" ry="${f(s*.7)}" fill="#e39a96" transform="rotate(${f(R()*180)} ${f(x)} ${f(y)})"/><path d="M${f(x-s)} ${f(y)}q${f(s)} ${f(-s*.5)} ${f(s*2)} 0" stroke="#fbd5d0" stroke-width="2" fill="none"/>`,
@@ -55,7 +56,7 @@ const P={
  fruit:(x,y,s)=>`<circle cx="${f(x)}" cy="${f(y)}" r="${f(s)}" fill="#e7a842"/><circle cx="${f(x+s*.3)}" cy="${f(y-s*.3)}" r="${f(s*.3)}" fill="#f7d98b" opacity=".8"/>`,
  tofu:(x,y,s,R)=>`<rect x="${f(x-s)}" y="${f(y-s)}" width="${f(s*2)}" height="${f(s*2)}" rx="${f(s*.3)}" fill="#f4e8c8" transform="rotate(${f(R()*40-20)} ${f(x)} ${f(y)})"/>`
 };
-const NOMS={viande:"viande",volaille:"volaille",porc:"porc",poisson_rose:"poisson",poisson:"poisson",crevette:"crevettes",anneau:"fruits de mer",moule:"moules",oeuf:"œuf",fromage:"fromage",grain:"céréales",pate:"pâtes",cube:"pommes de terre ou racines",legumineuse:"légumineuses",orange:"légumes orangés",rouge:"légumes rouges",vert:"légumes verts",champignon:"champignons",chou_fleur:"chou-fleur",oignon:"oignons",aubergine:"aubergine",fruit:"fruit",tofu:"tofu"};
+const NOMS={oeuf_battu:"œuf battu cuit",viande:"viande",volaille:"volaille",porc:"porc",poisson_rose:"poisson",poisson:"poisson",crevette:"crevettes",anneau:"fruits de mer",moule:"moules",oeuf:"œuf",fromage:"fromage",grain:"céréales",pate:"pâtes",cube:"pommes de terre ou racines",legumineuse:"légumineuses",orange:"légumes orangés",rouge:"légumes rouges",vert:"légumes verts",champignon:"champignons",chou_fleur:"chou-fleur",oignon:"oignons",aubergine:"aubergine",fruit:"fruit",tofu:"tofu"};
 let compteur=0;
 globalThis.illustrationPlat=function(r){
  const R=rng(hash(r.i||r.n)),cats=elements(r),uid="il"+(++compteur),bol=SOUPE.test(r.n);
