@@ -1,0 +1,27 @@
+/* npm install --prefix /tmp/browsertest playwright puis node tests/browser.cjs [URL] */
+const {chromium}=require('playwright');
+const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const root=path.join(__dirname,'..');let passed=0;const errors=[];
+const server=http.createServer((req,res)=>{let p=decodeURIComponent(req.url.split('?')[0]);p=path.join(root,p==='/'?'index.html':p);try{const b=fs.readFileSync(p);res.setHeader('Content-Type',p.endsWith('.js')?'text/javascript':p.endsWith('.css')?'text/css':p.endsWith('.png')?'image/png':p.endsWith('.webmanifest')?'application/manifest+json':'text/html');res.end(b);}catch{res.writeHead(404);res.end('Introuvable');}});
+const ok=(cond,msg)=>{assert.ok(cond,msg);passed++;};
+(async()=>{await new Promise(r=>server.listen(8123,'127.0.0.1',r));const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',headless:true,args:['--no-sandbox']});const context=await browser.newContext({viewport:{width:390,height:844},locale:'fr-FR'});const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));const url=process.argv[2]||'http://127.0.0.1:8123/';
+try{
+ await page.goto(url);await page.locator('.carte[data-id]').first().waitFor();ok(await page.locator('.carte[data-id]').count()===7,'7 cartes');
+ ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'pas de débordement mobile 390');
+ await page.screenshot({path:'/downloads/repas-mobile-semaine.png',fullPage:true});
+ await page.locator('[data-act=detail]').first().click();ok(await page.locator('.detail').first().isVisible(),'détail ouvert');ok((await page.locator('.detail').first().innerText()).includes('Préparation'),'étapes');
+ const firstId=await page.locator('.carte[data-id]').first().getAttribute('data-id');await page.locator('[data-act=relancer]').first().click();ok(await page.locator('.carte[data-id]').first().getAttribute('data-id')!==firstId,'relance change repas');
+ const relaunchId=await page.locator('.carte[data-id]').first().getAttribute('data-id');await page.reload();ok(await page.locator('.carte[data-id]').first().getAttribute('data-id')===relaunchId,'plan persiste');
+ await page.locator('[data-vue=bilan]').click();ok((await page.locator('#vue-bilan').innerText()).includes('Protéines'),'macro protéines');ok((await page.locator('#vue-bilan').innerText()).includes('Énergie'),'énergie');ok(await page.locator('#vue-bilan tr').count()===28,'27 nutriments');ok((await page.locator('#vue-bilan').innerText()).includes('Partiel'),'lacunes par nutriment');
+ await page.screenshot({path:'/downloads/repas-mobile-bilan.png',fullPage:true});
+ await page.locator('[data-vue=courses]').click();const initialCourses=await page.locator('.ligne-course').count();ok(initialCourses>10,'courses agrégées');await page.locator('#ajoutTxt').fill('<img src=x onerror=alert(1)> café');await page.locator('#formAjout button').click();ok(await page.locator('.ligne-course').count()===initialCourses+1,'article ajouté');ok(await page.locator('#vue-courses img').count()===0,'texte manuel échappé');await page.reload();await page.locator('[data-vue=courses]').click();ok((await page.locator('#vue-courses').innerText()).includes('café'),'article persiste');await page.locator('[data-act=supprManuel]').click();ok(await page.locator('.ligne-course').count()===initialCourses,'article supprimé');
+ await page.locator('[data-vue=semaine]').click();await page.locator('#formRepas button').click();ok(await page.locator('[data-act=supprRepas]').count()===1,'repas manuel');await page.locator('[data-vue=bilan]').click();ok((await page.locator('#vue-bilan').innerText()).includes('16 portions/personne'),'repas ajouté au bilan');await page.locator('[data-vue=semaine]').click();await page.locator('[data-act=supprRepas]').click();
+ await page.locator('[data-vue=profil]').click();await page.locator('#cochesExc input[value=poisson]').check();await page.locator('#nbPortions').fill('8');await page.locator('#sauverProfil').click();ok(await page.locator('.carte[data-id] .badge').filter({hasText:/Poisson/}).count()===0,'exclusion poissons effective');ok((await page.locator('.meta').first().innerText()).includes('8 portions'),'portions actualisées');
+ const week=await page.locator('#semLabel').innerText();await page.locator('#semSuiv').click();ok(await page.locator('#semLabel').innerText()!==week,'semaine suivante');await page.locator('#semPrec').click();ok(await page.locator('#semLabel').innerText()===week,'retour semaine');
+ await page.setViewportSize({width:320,height:700});for(const view of ['semaine','bilan','courses','profil']){await page.locator(`[data-vue=${view}]`).click();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`pas débordement 320 ${view}`);}
+ await page.screenshot({path:'/downloads/repas-mobile-foyer-320.png',fullPage:true});
+ await page.setViewportSize({width:1280,height:900});await page.locator('[data-vue=semaine]').click();await page.screenshot({path:'/downloads/repas-desktop.png',fullPage:true});
+ ok(errors.length===0,'aucune erreur JS '+errors.join(','));
+ console.log(`${passed} contrôles navigateur passés sur ${url}`);
+}finally{await browser.close();await new Promise(r=>server.close(r));}
+})().catch(e=>{console.error(e);process.exitCode=1;server.close();});
