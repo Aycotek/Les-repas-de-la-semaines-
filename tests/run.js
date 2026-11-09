@@ -34,7 +34,7 @@ const sansPrix = Object.entries(ING).filter(([, v]) => !(v.prixKg > 0) && v.nom!
 test("chaque ingrédient a un prix indicatif", sansPrix.length === 0, sansPrix.map(([k]) => k).join(","));
 
 // null jamais converti en 0 : vérifier qu'il existe des null réels conservés dans la table
-const nbNull = Object.values(ING).reduce((a, v) => a + Object.entries(v).filter(([k, x]) => !["nom","ciqual","rayon","prixKg"].includes(k) && x === null).length, 0);
+const nbNull = Object.values(ING).reduce((a, v) => a + Object.entries(v).filter(([k, x]) => !["nom","ciqual","rayon","prixKg","sourceNom","etat","correspondance","kcalSrc"].includes(k) && x === null).length, 0);
 console.log("     (info)", nbNull, "valeurs nutriment absentes conservées comme null");
 
 // Recettes : cohérence minimale
