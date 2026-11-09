@@ -177,3 +177,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 /* Une quantité d’achat longue reste lisible à 320 px. */
 .ligne-course{align-items:flex-start;flex-wrap:wrap}.ligne-course label{flex:1 1 180px;min-width:0}.ligne-course .qte{white-space:normal;overflow-wrap:anywhere;flex:0 1 340px;line-height:1.5}.note-achat{display:block;font-size:.76rem;margin-top:3px}
 @media(max-width:600px){.ligne-course .qte{flex-basis:100%;padding-left:32px}.detail li{overflow-wrap:anywhere}}
+
+/* Choix explicite à l'ajout d'un plat : remplacer un dîner prévu ou ajouter un 8e repas. */
+#formRepas{flex-wrap:wrap}
+.choix-ajout{flex-basis:100%;min-width:0;border:1px solid var(--bord);border-radius:14px;padding:8px 12px 12px;display:grid;gap:8px;background:rgba(255,255,255,.45)}
+.choix-ajout legend{font-size:.82rem;font-weight:700;color:var(--bordeaux);padding:0 6px}
+.choix-ajout .choix{display:flex;align-items:center;gap:8px;font-size:.9rem;cursor:pointer;min-height:32px}
+.choix-ajout input[type=radio]{flex:0 0 auto;width:18px;height:18px;accent-color:var(--bordeaux)}
+.choix-ajout .choix-cible{display:block}
+.choix-ajout .choix-cible select{width:100%;padding:9px 12px;border:1px solid var(--bord);border-radius:12px;font-size:.88rem;background:rgba(255,255,255,.8);color:var(--texte)}
+.repas-plus h3{margin-top:14px}
+.ligne-repas-plus{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--bord);font-size:.92rem}
