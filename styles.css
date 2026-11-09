@@ -1,0 +1,56 @@
+:root{--vert:#2e7d32;--vert-clair:#e8f5e9;--texte:#1b1b1b;--gris:#666;--fond:#fafafa;--carte:#fff;--bord:#e0e0e0;--orange:#e65100;--rouge:#b71c1c;--rayon:12px}
+*{box-sizing:border-box;margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--fond);color:var(--texte);line-height:1.45;padding-bottom:env(safe-area-inset-bottom)}
+.entete{background:var(--vert);color:#fff;padding:14px 16px 10px}
+.entete h1{font-size:1.25rem}
+.semaine-nav{display:flex;align-items:center;gap:12px;margin-top:8px}
+.semaine-nav button{background:#ffffff2e;border:0;color:#fff;font-size:1.3rem;width:38px;height:38px;border-radius:50%;cursor:pointer}
+.semaine-nav span{font-size:.95rem;font-weight:600}
+.onglets{display:flex;background:var(--carte);border-bottom:1px solid var(--bord);position:sticky;top:0;z-index:5}
+.onglets button{flex:1;padding:12px 4px;background:none;border:0;border-bottom:3px solid transparent;font-size:.85rem;color:var(--gris);cursor:pointer}
+.onglets button.actif{color:var(--vert);border-bottom-color:var(--vert);font-weight:600}
+main{max-width:760px;margin:0 auto;padding:12px}
+.vue{display:none}.vue.actif{display:block}
+.carte{background:var(--carte);border:1px solid var(--bord);border-radius:var(--rayon);padding:14px;margin-bottom:10px}
+.repas-tete{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.repas-tete h2{font-size:1.02rem}
+.badge{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:10px;background:var(--vert-clair);color:var(--vert);margin:2px 2px 0 0}
+.badge.long{background:#fff3e0;color:var(--orange)}
+.meta{color:var(--gris);font-size:.8rem;margin-top:4px}
+.actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+button.petit{font-size:.8rem;padding:7px 12px;border-radius:8px;border:1px solid var(--vert);background:#fff;color:var(--vert);cursor:pointer}
+button.petit.principal{background:var(--vert);color:#fff}
+.detail{margin-top:10px;border-top:1px dashed var(--bord);padding-top:10px;font-size:.9rem}
+.detail h3{font-size:.9rem;margin:8px 0 4px}
+.detail ul{padding-left:18px}
+.detail li{margin:2px 0}
+.alternatives{background:#fff8e1;border-radius:8px;padding:8px;font-size:.8rem;margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--bord)}
+th:first-child,td:first-child{text-align:left}
+.barre{height:8px;background:#eee;border-radius:4px;overflow:hidden;min-width:70px}
+.barre>i{display:block;height:100%;background:var(--vert)}
+.barre>i.depasse{background:var(--rouge)}
+.note{font-size:.8rem;color:var(--gris);margin-top:8px}
+.ok{color:var(--vert)}.ko{color:var(--rouge)}
+.reperes li{margin:4px 0;font-size:.9rem;list-style:none}
+.rayon-titre{font-size:.95rem;margin:14px 0 6px;color:var(--vert)}
+.ligne-course{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:.9rem;gap:8px}
+.ligne-course .qte{color:var(--gris);white-space:nowrap}
+.ligne-course.barree{opacity:.45;text-decoration:line-through}
+.total-courses{font-weight:700;margin-top:12px;font-size:1rem}
+form.ajout{display:flex;gap:8px;margin-top:14px}
+form.ajout input{flex:1;padding:10px;border:1px solid var(--bord);border-radius:8px;font-size:.9rem}
+form.ajout button{padding:10px 16px;border:0;border-radius:8px;background:var(--vert);color:#fff;cursor:pointer}
+.champ{margin-bottom:14px}
+.champ label{display:block;font-size:.85rem;font-weight:600;margin-bottom:4px}
+.champ input[type=number],.champ select{width:100%;padding:10px;border:1px solid var(--bord);border-radius:8px;font-size:.95rem}
+.coches{display:flex;flex-wrap:wrap;gap:8px}
+.coches label{border:1px solid var(--bord);border-radius:16px;padding:6px 12px;font-size:.8rem;cursor:pointer}
+.coches input{accent-color:var(--vert)}
+.pied{padding:16px;font-size:.72rem;color:var(--gris);text-align:center}
+.pied a{color:var(--vert)}
+.bandeau-budget{display:flex;justify-content:space-between;align-items:center;background:var(--carte);border:1px solid var(--bord);border-radius:var(--rayon);padding:12px 14px;margin-bottom:10px}
+.bandeau-budget .montant{font-size:1.15rem;font-weight:700}
+.masque{display:none}
+@media (min-width:600px){.entete h1{font-size:1.5rem}main{padding:16px}}
