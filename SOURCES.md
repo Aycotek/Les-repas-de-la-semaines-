@@ -32,4 +32,10 @@
 
 ## Code
 
-- Application statique sans dépendance externe, licence MIT (voir LICENCE).
+- Application statique sans dépendance externe, licence MIT (voir LICENSE).
+
+## Limites de calcul
+
+Les portions et les grammes sont calculés sur les quantités de recette. Les correspondances CIQUAL utilisent parfois un état cru, cuit ou appertisé ; les pertes de cuisson, la biodisponibilité et la cuisson exacte ne sont pas modélisées. Une somme partielle est affichée avec son nombre de données absentes par nutriment. Elle ne prouve ni une couverture réelle ni une carence. Le bilan porte uniquement sur les recettes choisies, ajouts compris. Les articles de courses libres ne sont ni chiffrés ni inclus dans le bilan. Les exclusions sont des filtres de préférences et ne garantissent pas l’absence d’allergène ou de traces.
+
+Les repères protéiques utilisent 0,83 g/kg/j et des adultes types de 70 et 60 kg alternés selon la taille du foyer, affichés dans les réglages. Ni l’âge, ni une grossesse, ni une pathologie ne sont modélisés.
