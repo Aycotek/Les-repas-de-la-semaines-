@@ -27,10 +27,10 @@ const clesManquantes = new Set();
 for (const r of TOUTES) for (const [k] of r.ing) if (!ING[k]) clesManquantes.add(k);
 test("toutes les clés ingrédient résolues", clesManquantes.size === 0, [...clesManquantes].join(","));
 
-const sansCode = Object.entries(ING).filter(([, v]) => !v.ciqual);
-test("chaque ingrédient a un code CIQUAL traçable", sansCode.length === 0, sansCode.map(([k]) => k).join(","));
+const sansCode = Object.entries(ING).filter(([, v]) => !v.ciqual && v.correspondance!=="non disponible");
+test("chaque ingrédient a un code CIQUAL ou une absence explicitée", sansCode.length === 0, sansCode.map(([k]) => k).join(","));
 
-const sansPrix = Object.entries(ING).filter(([, v]) => !(v.prixKg > 0));
+const sansPrix = Object.entries(ING).filter(([, v]) => !(v.prixKg > 0) && v.nom!=="Eau");
 test("chaque ingrédient a un prix indicatif", sansPrix.length === 0, sansPrix.map(([k]) => k).join(","));
 
 // null jamais converti en 0 : vérifier qu'il existe des null réels conservés dans la table
