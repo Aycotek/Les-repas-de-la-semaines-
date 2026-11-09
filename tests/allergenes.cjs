@@ -7,6 +7,7 @@ let n=0;const test=(name,fn)=>{try{fn();n++;}catch(e){console.error('FAIL',name,
 const base=JSON.parse(JSON.stringify(a.getProfil()));
 const ING=ctx.INGREDIENTS,AL=ctx.ALLERGENES,AI=ctx.ALLERGENES_ING,SANS=new Set(ctx.SANS_ALLERGENE);
 test('tout ingrédient du catalogue est classé (allergène ou "sans")',()=>{const manque=Object.keys(ING).filter(k=>!AI[k]&&!SANS.has(k));assert.equal(manque.length,0,manque.join());});
+test('aucun ingrédient classé à la fois sans allergène et avec allergène',()=>{assert.equal(Object.keys(AI).filter(k=>SANS.has(k)).length,0);});
 test('aucun ingrédient inconnu dans la table',()=>{for(const k of [...Object.keys(AI),...SANS])assert.ok(ING[k],k);});
 test('14 allergènes UE listés',()=>assert.equal(AL.length,14));
 // vérités terrain choisies à la main
