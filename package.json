@@ -1,6 +1,0 @@
-{
-  "name": "repas-semaine", "version": "1.0.0", "private": true,
-  "description": "Planificateur hebdomadaire statique, sans service externe à l'exécution",
-  "scripts": {"test": "node tests/run.js && node tests/extended.js && node tests/nutrition-v2.cjs", "test:browser": "node tests/browser.cjs", "test:security": "node tests/security.cjs"},
-  "devDependencies": {"playwright": "1.65.0"}
-}
