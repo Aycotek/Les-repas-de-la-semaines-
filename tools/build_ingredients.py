@@ -197,7 +197,7 @@ M = {
 "poivron":("Poivrons","Sweet pepper, green, yellow or red, raw","fruits_legumes",3),
 "polenta":("Polenta (semoule de maïs)","Polenta or Maize/corn semolina, pre-cooked, dried","feculents",2.5),
 "pomme":("Pommes","Apple, pulp, raw","fruits_legumes",1.8),
-"pomme_de_terre":("Pommes de terre","Potato, boiled/cooked in water","fruits_legumes",1.5),
+"pomme_de_terre":("Pommes de terre","Potato, peeled, raw","fruits_legumes",1.5),
 "pomme_de_terre_nouvelle":("Pommes de terre nouvelles","New potato, raw","fruits_legumes",2),
 "porc_filet_mignon":("Filet mignon de porc","Pork tenderloin, lean, raw","boucherie",10),
 "porc_hache":("Chair à saucisse (porc haché)","Pork, shoulder, raw","boucherie",8),
@@ -216,7 +216,7 @@ M = {
 "rhubarbe":("Rhubarbe","Rhubarb, stalk, raw","fruits_legumes",3),
 "ricotta":("Ricotta","Ricotta cheese","cremerie",8),
 "riz_arborio":("Riz arborio (risotto)","Rice, parboiled, raw","feculents",3.5),
-"riz_basmati_complet":("Riz basmati complet","Basmati rice, raw","feculents",3),
+"riz_basmati_complet":("Riz basmati complet","Rice, brown, raw","feculents",3),
 "riz_complet":("Riz complet","Rice, brown, raw","feculents",2.5),
 "romarin":("Romarin frais","Rosemary, fresh","fruits_legumes",25),
 "roquette":("Roquette","Roman rocket, raw","fruits_legumes",5),
@@ -260,7 +260,10 @@ M = {
 "vin_rouge":("Vin rouge","Wine, red","epicerie",4),
 "vinaigre":("Vinaigre","Vinegar","epicerie",1.5),
 "vinaigre_balsamique":("Vinaigre balsamique","Vinegar, balsamic","epicerie",6),
-"vol_au_vent":("Vol-au-vent","Vol-au-vent, filled (average)","boulangerie",6),
+"vol_au_vent":("Vol-au-vent","Puff pastry, cooked","boulangerie",6),
+"eau":("Eau","Water, municipal","epicerie",0),
+"kiwi":("Kiwis","Kiwi fruit, pulp and seeds, raw","fruits_legumes",4),
+"fraise":("Fraises","Strawberry, raw","fruits_legumes",6),
 "yaourt_nature":("Yaourts nature","Fermented milk or dairy specialty, yogurt type, plain, with bifidus","cremerie",1.5),
 }
 
@@ -278,6 +281,9 @@ COLS = {
  "omega3":"FA 18:3 c9,c12,c15 (n-3) (g/100g)","epa":"FA 20:5 5c,8c,11c,14c,17c (n-3) EPA (g/100g)",
  "dha":"FA 22:6 4c,7c,10c,13c,16c,19c (n-3) DHA (g/100g)",
 }
+# Correspondances voisines conservées mais signalées, jamais présentées comme une analyse du produit exact.
+APPROX = {"bouquet_garni","burrata","chapelure_complete","crozets","curry_japonais","lentilles_corail","naan_complet","orge_monde","pain_pita_complet","pate_curry_rouge","pate_curry_vert","poulet_fume","radis_avec_fanes","ras_el_hanout","riz_arborio","riz_basmati_complet","semoule_complete","tortilla_ble_complet","vol_au_vent","porc_hache"}
+INDISPONIBLE={"moelle_os","galette_riz","sauce_huitre","ortie_feuille","pate_a_pain"}
 missing, out = [], {}
 for key,(nom_fr,eng,rayon,prix) in M.items():
     row = rows.get(eng)
@@ -295,6 +301,13 @@ for key,(nom_fr,eng,rayon,prix) in M.items():
         p, g2, l, fi = (d.get("prot") or 0), (d.get("gluc") or 0), (d.get("lip") or 0), (d.get("fibres") or 0)
         d["kcal"] = round(4 * p + 4 * g2 + 9 * l + 2 * fi, 1)
         d["kcalSrc"] = "calc"
+    d["sourceNom"]=eng
+    d["correspondance"]="approximative" if key in APPROX else "directe"
+    d["etat"]="cuit/appertisé" if any(x in eng.lower() for x in ["cooked","canned","reheated"]) else "cru/sec ou état du produit indiqué"
+    if key in INDISPONIBLE:
+        d.update(ciqual=None,sourceNom=None,correspondance="non disponible",etat="pas de correspondance validée")
+        for nutrient in COLS:d[nutrient]=None
+        d.pop("kcalSrc",None)
     out[key]=d
 if missing:
     print("MANQUANTS:"); [print(" ",k,"->",e) for k,e in missing]; sys.exit(1)
