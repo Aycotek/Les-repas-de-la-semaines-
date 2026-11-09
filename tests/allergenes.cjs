@@ -49,10 +49,13 @@ test('fruits de mer : aversion poisson épargne les coquillages, aversion fruits
  assert.equal(a.estExclue(e20,['evite:fruits_de_mer']),true);
  assert.equal(a.estExclue(t06,['evite:poisson_gout']),true); // sauce de poisson = goût de poisson réel
 });
-test('vinaigre de vin : sulfites déclarés ; bouquet garni classique sans céleri',()=>{
+test('sulfites : vin certain, vinaigre/cidre/fruits secs possibles selon marque ; bouquet garni : céleri possible (mélanges commerciaux variables)',()=>{
+ assert.ok(ctx.ALLERGENES_ING['vin_blanc'].c.includes('sulfites'));
+ for(const k of ['vinaigre','vinaigre_balsamique','cidre_brut','raisin_sec']){assert.ok(ctx.ALLERGENES_ING[k].p.includes('sulfites'),k);assert.equal(ctx.ALLERGENES_ING[k].c.length,0,k);}
+ assert.ok(ctx.ALLERGENES_ING['bouquet_garni'].p.includes('celeri'));
+ assert.equal(ctx.ALLERGENES_ING['bouquet_garni'].c.length,0);
  assert.ok(ctx.allergenesIng('vinaigre').includes('sulfites'));
- assert.ok(ctx.allergenesIng('vinaigre_balsamique').includes('sulfites'));
- assert.equal(ctx.allergenesIng('bouquet_garni').length,0);
+ assert.ok(ctx.allergenesIng('bouquet_garni').includes('celeri'));
 });
 test('illustrations déterministes et distinctes',()=>{const r=a.RECETTES[0];const x=ctx.illustrationPlat(r).replace(/il\d+/g,'');const y=ctx.illustrationPlat(r).replace(/il\d+/g,'');assert.equal(x,y);assert.notEqual(x,ctx.illustrationPlat(a.RECETTES[60]).replace(/il\d+/g,''));});
 
