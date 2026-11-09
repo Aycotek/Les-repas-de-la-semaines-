@@ -42,7 +42,7 @@ a.setProfil(base);
 const withNull=a.RECETTES.find(r=>a.nutrimentsRecette(r).manquants>0);
 test('poisson gras possède un ingrédient gras identifié',()=>{for(const r of a.RECETTES.filter(r=>r.t==='poisson_gras'))assert.ok(r.ing.some(([k])=>/^(saumon|maquereau|sardine|hareng|truite)/.test(k)));});
 test('données manquantes suivies par nutriment',()=>{const x=a.nutrimentsRecette(withNull);assert.ok(x.manquants>0);assert.equal(Object.values(x.absents).reduce((s,n)=>s+n,0),x.manquants);assert.ok(Object.values(x.t).every(Number.isFinite));});
-test('539 valeurs source absentes ne deviennent pas zéro',()=>{assert.ok(Object.values(a.ING).some(i=>Object.values(i).includes(null)));});
+test('valeurs source absentes ne deviennent pas zéro',()=>{assert.ok(Object.values(a.ING).some(i=>Object.values(i).includes(null)));});
 for(const invalid of ['null','{}','["inconnu"]','[1,2]','["'+p[0]+'","'+p[0]+'"]']){
  store['ns_plan_'+a.cleSemaine()]=invalid;
  test(`stockage plan invalide ${invalid}`,()=>assert.equal(a.chargerPlan().length,7));
