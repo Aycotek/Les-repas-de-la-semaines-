@@ -95,14 +95,23 @@ function mulberry32(a) {
     return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 }
 // Score d'un plan : couverture des repères PNNS + nutriments + budget. Pénalités douces.
+function formeCulinaire(r) {
+ const n=r.n.toLowerCase();
+ if(/soupe|velouté|bouillon|minestrone|dahl|curry|ramen/.test(n))return "bol_mijote";
+ if(/salade|taboulé|bowl/.test(n))return "salade";
+ if(/gratin|tarte|quiche|pizza|lasagne|hachis|tian/.test(n))return "four";
+ if(/pâtes|spaghetti|tagliatelle|risotto|riz|nouilles|crozets/.test(n))return "cereales";
+ return "poele_roti";
+}
 function scorePlan(ids,mois=moisSemaine()) {
   const recettes = ids.map(i => RECETTE_PAR_ID[i]);
   let s = 0;
-  const types = {};
+  const types = {}, formes = {};
   let poisson = 0, gras = 0, legum = 0, viandeG = 0, charcG = 0, budget = 0;
   const tot = {}; for (const [cle] of NUTRIMENTS) tot[cle] = 0;
   for (const r of recettes) {
     types[r.t] = (types[r.t] || 0) + 1;
+    const forme=formeCulinaire(r);formes[forme]=(formes[forme]||0)+1;
     if (r.t === "poisson_maigre" || r.t === "poisson_gras") poisson++;
     if (r.t === "poisson_gras") gras++;
     if (contientLegumineuses(r)) legum++;
@@ -114,24 +123,31 @@ function scorePlan(ids,mois=moisSemaine()) {
     for (const [cle] of NUTRIMENTS) tot[cle] += t[cle] * profil.portionsParRecette / 4;
   }
   // PNNS (occasions de consommation = recette × 2 portions/pers : dîner + restes)
-  s -= 18 * Math.abs(poisson - 2);            // 2 dîners poisson => 4 occasions/pers (repère : 2)
-  if (gras < 1) s -= 14;
-  s -= 8 * Math.max(0, 2 - legum);
+  s -= 40 * Math.abs(poisson - 2);            // 2 dîners poisson => 4 occasions/pers (repère : 2)
+  if (gras < 1) s -= 35;
+  s -= 35 * Math.max(0, 2 - legum);
   s -= Math.max(0, viandeG - REF.reperes.viandeRouge_g_max_par_semaine) * 10;
   s -= Math.max(0, charcG - REF.reperes.charcuterie_g_max_par_semaine) * 10;
-  s -= Math.max(0, budget - profil.budget) * 10;
-  for (const t of Object.values(types)) if (t > 2) s -= 6 * (t - 2);
+  s -= Math.max(0, budget + coutComplements() - profil.budget) * 10;
+  for (const t of Object.values(types)) if (t > 2) s -= 12 * (t - 2);
+  for(const [f,n] of Object.entries(formes)) s-= (f==="bol_mijote"?35:15)*Math.max(0,n-2);
+  for(let i=1;i<recettes.length;i++)if(formeCulinaire(recettes[i])===formeCulinaire(recettes[i-1]))s-=5;
   // Saisonnalité (contrainte souple) : bonus pour les recettes propres au mois courant
   for (const r of recettes) if ((r.m || []).includes(mois) && (r.m || []).length < 12) s += 4;
   // Nutriments : moyenne des % des RNP hebdo couverts (cible douce, périmètre = repas planifiés)
   const rnp = rnpHebdoFoyer();
-  let couverture = 0, compte = 0;
+  // Seuil de comparaison interne, non une référence médicale : les deux repas ne couvrent pas la journée.
+  // Aucun crédit supplémentaire au-delà de 70 % ; les apports faibles ne sont plus compensés par l'excès de protéines.
+  const ratios=[];
   for (const [cle, , , refCle] of NUTRIMENTS) {
-    if (!refCle || !rnp[refCle]) continue;
-    const parPers = tot[cle] / profil.personnes.length; // 7 dîners + 7 déjeuners de restes par personne
-    couverture += Math.min(parPers / rnp[refCle], 1.2); compte++;
+    if(!refCle||!rnp[refCle])continue;
+    const ratio=tot[cle]/profil.personnes.length/rnp[refCle];
+    const poids=cle==="prot"?0.35:1;
+    ratios.push(Math.min(ratio/0.70,1)*poids);
+    s-=25*poids*Math.max(0,0.55-ratio);
   }
-  s += 30 * (couverture / compte);
+  s+=25*ratios.reduce((a,b)=>a+b,0)/ratios.length;
+
   return s;
 }
 function rnpHebdoFoyer() {
@@ -201,6 +217,18 @@ function coursesManuelles() { try { const a=JSON.parse(stockage.getItem("ns_cour
 function repasManuels() { try { const a=JSON.parse(stockage.getItem("ns_repas_"+cleSemaine())||"[]"); return Array.isArray(a)?a.filter(id=>typeof id==="string" && RECETTE_PAR_ID[id]).slice(0,40):[]; } catch { return []; } }
 function idsComplets() { return [...plan,...repasManuels()]; }
 function sauverCoursesManuelles(l) { stockage.setItem("ns_courses_" + cleSemaine(), JSON.stringify(l)); }
+function complementsActifs() { return stockage.getItem("ns_complements_"+cleSemaine())==="oui"; }
+function complements(mois=moisSemaine(),force=false) {
+ if(!force&&!complementsActifs())return [];
+ const fruits={1:["orange","kiwi","pomme"],2:["orange","kiwi","pomme"],3:["orange","kiwi","pomme"],4:["fraise","pomme"],5:["fraise"],6:["fraise","peche"],7:["peche","melon"],8:["peche","melon"],9:["pomme","raisin"],10:["pomme","kiwi"],11:["kiwi","pomme","orange"],12:["orange","kiwi","pomme"]}[mois];
+ const liste=[];
+ for(let j=0;j<7;j++){
+  const items=[[fruits[j%fruits.length],150],["yaourt_nature",125],["amande_effilee",10]];
+  for(const [k,g]of items){if(!ING[k]||estExclue({t:"vege",ing:[[k,g]]},profil.exclusions))continue;liste.push([k,g*profil.portionsParRecette]);}
+ }
+ return liste;
+}
+function coutComplements(force=false){return complements(moisSemaine(),force).reduce((sum,[k,g])=>sum+ING[k].prixKg*g/1000,0);}
 function listeCourses() {
   const echelle = profil.portionsParRecette / 4; // recettes écrites pour 4 portions
   const agg = {};
@@ -212,6 +240,7 @@ function listeCourses() {
       agg[k].prix += ing.prixKg * g * echelle / 1000;
     }
   }
+  for(const [k,g] of complements()){const ing=ING[k];if(!agg[k])agg[k]={nom:ing.nom,rayon:ing.rayon,g:0,prix:0};agg[k].g+=g;agg[k].prix+=ing.prixKg*g/1000;}
   return agg;
 }
 
@@ -246,21 +275,22 @@ function rendreSemaine() {
       <div class="detail masque">
         <h3>Ingrédients (${profil.portionsParRecette} portions)</h3>
         <ul>${r.ing.map(([k, g]) => { const ing = ING[k]; return ing ? `<li>${ing.nom} — ${Math.round(g * profil.portionsParRecette / 4)} g</li>` : ""; }).join("")}</ul>
-        <p class="note">~${eur(coutRecette(r)*profil.portionsParRecette/4)} pour la recette · ~${Math.round(nutrimentsRecette(r).t.kcal/4)} kcal/portion (estimation, données partielles possibles)</p><h3>Préparation</h3>
+        <p class="note">~${eur(coutRecette(r)*profil.portionsParRecette/4)} pour la recette · ~${Math.round(nutrimentsRecette(r).t.kcal/4)} kcal/portion (estimation, données partielles possibles)</p><p class="note">Correspondances CIQUAL approximatives ou absentes (non chiffrées si absentes) : ${r.ing.filter(([k])=>ING[k].correspondance!=="directe").map(([k])=>esc(ING[k].nom)).join(", ")||"aucune signalée"}. Quantités : poids comestibles, hors os/coquilles ; conserver la mention du produit.</p><h3>Préparation</h3>
         <ul>${(r.et || []).map(e => `<li>${e}</li>`).join("")}</ul>
       </div>
     </div>`;
   }).join("");
   $("#vue-semaine").innerHTML =
-    `<div class="bandeau-budget"><span>Budget estimé des 7 dîners<br><small class="note">hypothèses indicatives, quantités utilisées, pas un panier magasin</small></span>
+    `<div class="bandeau-budget"><span>Budget estimé des menus sélectionnés<br><small class="note">hypothèses indicatives, quantités utilisées, pas un panier magasin</small></span>
      <span class="montant ${budget > profil.budget ? "ko" : "ok"}">${eur(budget)}</span></div>` + cartes +
-    `<div class="carte"><h2>Repas ajoutés à la semaine</h2><p class="note">Chaque ajout correspond à une recette entière de ${profil.portionsParRecette} portions. Courses, coût et nutrition inclus ; aucun ajout automatique aux 7 dîners.</p>${repasManuels().map((id,i)=>`<p>${esc(RECETTE_PAR_ID[id].n)} <button class="petit" data-act="supprRepas" data-idx="${i}">Retirer le repas</button></p>`).join("")}<form id="formRepas" class="ajout"><label for="ajoutRepas" class="sr-only">Recette à ajouter</label><select id="ajoutRepas">${RECETTES.filter(r=>!estExclue(r,profil.exclusions)).map(r=>`<option value="${r.i}">${esc(r.n)}</option>`).join("")}</select><button>Ajouter ce repas</button></form></div><p class="note">Saison favorisée pour ${REF.mois[mois - 1]} (France métropolitaine), sans exclusion stricte des autres saisons. Hypothèses de l'app : prix indicatifs (pas des prix magasin), composition selon correspondances CIQUAL (états cru/cuit variables), pertes de cuisson non modélisées, 2 personnes par défaut.</p>`;
+    `<div class="carte"><h2>Compléter les repas, pas seulement le plat</h2><p class="note">Proposition facultative : par portion, 150 g de fruit de saison, 125 g de yaourt nature et 10 g d'amandes. Sur 7 recettes de ${profil.portionsParRecette} portions, les restes sont déjà inclus. Ce ne sont pas des portions supplémentaires de plat. Exclus : produits laitiers ou fruits à coque si cochés dans Foyer.</p><button class="petit" id="toggleComplements">${complementsActifs()?"Retirer les compléments":"Ajouter ces compléments à la semaine"}</button>${complementsActifs()?`<p class="note">Inclus dans les courses, le coût et le bilan : ${[...new Set(complements().map(([k])=>ING[k].nom))].join(", ")}. Coût indicatif : ${eur(coutComplements())}. Le bilan reste partiel, surtout pour la vitamine D.</p>`:`<p class=note>Aucun ajout dans les courses ou le bilan tant que tu n’as pas choisi de les inclure. Coût supplémentaire indicatif : ${eur(coutComplements(true))}. ${budget+coutComplements(true)>profil.budget?"Attention : le total dépasserait le budget cible, même avec les prix indicatifs.":""}</p>`}</div><div class="carte"><h2>Repas ajoutés à la semaine</h2><p class="note">Chaque ajout correspond à une recette entière de ${profil.portionsParRecette} portions. Courses, coût et nutrition inclus ; aucun ajout automatique aux 7 dîners.</p>${repasManuels().map((id,i)=>`<p>${esc(RECETTE_PAR_ID[id].n)} <button class="petit" data-act="supprRepas" data-idx="${i}">Retirer le repas</button></p>`).join("")}<form id="formRepas" class="ajout"><label for="ajoutRepas" class="sr-only">Recette à ajouter</label><select id="ajoutRepas">${RECETTES.filter(r=>!estExclue(r,profil.exclusions)).map(r=>`<option value="${r.i}">${esc(r.n)}</option>`).join("")}</select><button>Ajouter ce repas</button></form></div><p class="note">Saison favorisée pour ${REF.mois[mois - 1]} (France métropolitaine), sans exclusion stricte des autres saisons. Hypothèses de l'app : prix indicatifs (pas des prix magasin), composition selon correspondances CIQUAL (états cru/cuit variables), pertes de cuisson non modélisées, 2 personnes par défaut.</p>`;
 }
 
 function bilanPlan() {
  const tot={}, absents={}; let manquants=0;
  for(const [cle] of NUTRIMENTS) {tot[cle]=0;absents[cle]=0;}
  for(const id of idsComplets()) {const n=nutrimentsRecette(RECETTE_PAR_ID[id]);manquants+=n.manquants;for(const [cle] of NUTRIMENTS){tot[cle]+=n.t[cle]*profil.portionsParRecette/4;absents[cle]+=n.absents[cle];}}
+ if(complements().length){const n=nutrimentsRecette({ing:complements()});manquants+=n.manquants;for(const [cle]of NUTRIMENTS){tot[cle]+=n.t[cle];absents[cle]+=n.absents[cle];}}
  return {tot,absents,manquants};
 }
 function rendreBilan() {
@@ -281,6 +311,7 @@ function rendreBilan() {
     if (r.t === "poisson_gras") grasOcc += parPers;
     if (r.t === "legumineuses" || r.t === "vege") legumOcc += parPers;
   }
+  const avecComplements=bilanPlan();for(const [cle]of NUTRIMENTS)tot[cle]=avecComplements.tot[cle];manquants=avecComplements.manquants;budget+=coutComplements();
   const rnp = rnpHebdoFoyer();
   const legumesOcc = idsComplets().filter(id=>contientLegumineuses(RECETTE_PAR_ID[id])).length * profil.portionsParRecette / profil.personnes.length;
   const absents = bilanPlan().absents;
@@ -292,8 +323,8 @@ function rendreBilan() {
   const bas = NUTRIMENTS.filter(([cle,,,refCle])=>refCle && tot[cle]/profil.personnes.length/rnp[refCle]<0.5).map(([,nom])=>nom);
   const repere = (ok, txt) => `<li class="${ok ? "ok" : "ko"}">${ok ? "✓" : "✗"} ${txt}</li>`;
   $("#vue-bilan").innerHTML = `<div class="carte">
-    <h2>Bilan de la semaine (repas planifiés)</h2>
-    <p class="note">Périmètre : les dîners planifiés et leurs restes pris au déjeuner, soit ${idsComplets().length * profil.portionsParRecette / profil.personnes.length} portions/personne au total, ajouts inclus, pour ${profil.personnes.length} personnes. Hypothèse par défaut : 7 dîners + 7 déjeuners de restes. Petits-déjeuners et autres repas non compris. Les pourcentages visent les références ANSES adultes moyennes (profil type, pas un avis médical) ; viser 100 % sur les seuls repas planifiés n'est pas l'objectif, les autres repas complètent.</p>
+    <h2>Bilan de la semaine (repas planifiés)</h2><p class="note">Composition : certains ingrédients sont approchés par un aliment voisin ; le détail des plats le signale. Vitamine E : repères actualisés 10 mg/j homme / 9 mg/j femme (ANSES). Cela change le dénominateur, pas les apports du menu.</p>
+    <p class="note">Périmètre : les dîners planifiés et leurs restes pris au déjeuner, soit ${idsComplets().length * profil.portionsParRecette / profil.personnes.length} portions/personne au total, ajouts inclus, pour ${profil.personnes.length} personnes. ${complementsActifs()?"Fruits, yaourts et amandes sélectionnés inclus.":"Fruits et laitages hors plats non inclus sans sélection des compléments."} Hypothèse par défaut : 7 dîners + 7 déjeuners de restes. Petits-déjeuners et autres repas non compris. Fer : hypothèse femme à pertes menstruelles élevées (16 mg/j), pas une valeur universelle. Les pourcentages visent les références ANSES adultes moyennes (profil type, pas un avis médical) ; viser 100 % sur les seuls repas planifiés n'est pas l'objectif, les autres repas complètent.</p>
     <p class="alternatives">Couverture partielle du besoin hebdomadaire : ${bas.length?bas.join(", ")+" sous 50 % dans les recettes prévues.":"voir le détail ci-dessous."} Les autres repas doivent compléter. Aucune conclusion de carence : cuisson, données absentes et besoins personnels ne sont pas tous modélisés.</p><div class="table-wrap"><table><tr><th>Nutriment</th><th>Par personne / semaine</th><th></th><th>% repère hebdo</th></tr>${lignes}</table></div>
     <p class="note">${manquants} valeur(s) nutriment absente(s) de la table CIQUAL pour ces ingrédients : non comptées (jamais estimées à 0).</p>
     </div>
@@ -334,7 +365,7 @@ function rendreCourses() {
     <h2>Liste de courses — semaine du ${semaine.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}</h2>
     <p class="note">Nouvelle liste distincte pour chaque semaine (les anciennes restent consultables), regroupée par rayon. Quantités pour ${profil.portionsParRecette} portions par recette. Les prix sont des hypothèses indicatives (pas relevés en magasin ; les conditionnements réels peuvent faire varier le total).</p>
     ${html}
-    <p class="total-courses">Total estimé des recettes : ${eur(total)}<br><small class="note">Articles manuels non chiffrés et hors bilan nutritionnel.</small></p>
+    <p class="total-courses">Total estimé des menus et compléments choisis : ${eur(total)}<br><small class="note">Articles manuels non chiffrés et hors bilan nutritionnel.</small></p>
     <form class="ajout" id="formAjout"><label class="sr-only" for="ajoutTxt">Article manuel</label><input id="ajoutTxt" maxlength="200" placeholder="Ajouter un article (ex. café, papier cuisson)…" required><button>Ajouter</button></form>
   </div>`;
   $("#formAjout").addEventListener("submit", e => {
@@ -421,12 +452,13 @@ document.addEventListener("click", e => {
 });
 function rendreTout() {
  rendreSemaine(); rendreBilan(); rendreCourses(); rendreProfil();
- const total=idsComplets().reduce((t,id)=>t+coutRecette(RECETTE_PAR_ID[id])*profil.portionsParRecette/4,0);
- $(".montant").textContent=eur(total);
+ const total=idsComplets().reduce((t,id)=>t+coutRecette(RECETTE_PAR_ID[id])*profil.portionsParRecette/4,0)+coutComplements();
+ $(".montant").textContent=eur(total);$(".montant").classList.toggle("ko",total>profil.budget);$(".montant").classList.toggle("ok",total<=profil.budget);
+ $("#toggleComplements").addEventListener("click",()=>{stockage.setItem("ns_complements_"+cleSemaine(),complementsActifs()?"non":"oui");resetCoches();rendreTout();});
  $("#formRepas").addEventListener("submit",e=>{e.preventDefault();const id=$("#ajoutRepas").value;if(!RECETTE_PAR_ID[id] || repasManuels().length>=40)return;resetCoches();const l=repasManuels();l.push(id);stockage.setItem("ns_repas_"+cleSemaine(),JSON.stringify(l));rendreTout();});
  if(!stockageDisponible) $("#vue-semaine").innerHTML = '<p role="alert" class="alternatives">Stockage local indisponible : tes changements peuvent être perdus à la fermeture.</p>'+$("#vue-semaine").innerHTML;
 }
-if(typeof module!=="undefined" && module.exports) module.exports={contientLegumineuses,RECETTES,ING,scorePlan,genererPlan,relancerRepas,listeCourses,nutrimentsRecette,bilanPlan,rnpHebdoFoyer,estExclue,poolDuMois,lundiDe,isoSemaine,cleSemaine,idsComplets,coursesManuelles,repasManuels,chargerPlan,chargerProfil,rendreTout,activerVue,getProfil:()=>profil,setProfil:p=>{profil=p;},getPlan:()=>plan,setPlan:p=>{plan=p;},setSemaine:d=>{semaine=lundiDe(d);}};
+if(typeof module!=="undefined" && module.exports) module.exports={formeCulinaire,complements,coutComplements,contientLegumineuses,RECETTES,ING,scorePlan,genererPlan,relancerRepas,listeCourses,nutrimentsRecette,bilanPlan,rnpHebdoFoyer,estExclue,poolDuMois,lundiDe,isoSemaine,cleSemaine,idsComplets,coursesManuelles,repasManuels,chargerPlan,chargerProfil,rendreTout,activerVue,getProfil:()=>profil,setProfil:p=>{profil=p;},getPlan:()=>plan,setPlan:p=>{plan=p;},setSemaine:d=>{semaine=lundiDe(d);}};
 rendreTout();
 if (typeof navigator!=="undefined" && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 })();
