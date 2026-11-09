@@ -23,7 +23,7 @@ Les deux suites navigateur utilisent Chrome à `/usr/bin/google-chrome` par déf
 | Saison si possible | Bonus de score, pas interdiction stricte | Tous les ingrédients d'une recette ne sont pas contrôlés en temps réel |
 | Budget environ 80 € | Calcul quantités × hypothèses €/kg ; 60 semaines testées | Pas un panier Lidl, pas de relevé de prix ni de conditionnement réel |
 | Équilibre | Score nutritionnel et repères poissons/légumineuses/viande/charcuterie ; 60 plans et 7 relances | Optimisation heuristique, aucune garantie nutritionnelle complète |
-| Bilan | 27 nutriments, moyenne par personne, références adultes types et lacunes par nutriment | 539 cellules source absentes ; états cru/cuit et pertes de cuisson non harmonisés |
+| Bilan | 27 nutriments, moyenne par personne, références adultes types et lacunes par nutriment | 657 cellules nutriment absentes (dont ingrédients sans correspondance validée) ; états cru/cuit et pertes de cuisson non harmonisés |
 | Ajouts manuels | Articles libres + repas du catalogue ; courses et nutrition recalculées | Pas de saisie libre d'une nouvelle recette ou import de lien |
 | Courses | Sommes par ingrédient, rayon, grammes/kg, cases cochables persistantes | Produits composés et unités magasin non normalisés ; articles libres hors prix/nutrition |
 | Exclusions | Familles développées, appliquées à génération et relance | Pas une garantie allergène/traces ; vérifier les produits |
@@ -58,7 +58,7 @@ Comptes multi-appareils, connexion sociale dans l'app, synchronisation, moteur d
 
 ### Mesure comparative
 
-60 plans appariés : 12 mois × graines 1 à 5, profil type 2 personnes/4 portions. Médiannes des pourcentages de références hebdomadaires, pour les repas planifiés uniquement :
+60 plans appariés : 12 mois × graines 1 à 5, profil type 2 personnes/4 portions. Médianes des pourcentages de références hebdomadaires, pour les repas planifiés uniquement :
 
 | Nutriment | V1 plats | Révision plats | Révision avec option fruit/yaourt/amandes |
 | --- | ---: | ---: | ---: |
