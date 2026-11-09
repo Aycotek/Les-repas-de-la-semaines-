@@ -6,6 +6,7 @@ const el=s=>els[s]||= {innerHTML:'',textContent:'',value:'',classList:{toggle(){
 const ctx={console,Date,Math,JSON,module:{exports:{}},navigator:{},localStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>store[k]=v},document:{querySelector:el,querySelectorAll:()=>[],addEventListener(){}}};ctx.globalThis=ctx;
 vm.createContext(ctx);
 for(const f of ['references','ingredients','recipes-hiver','recipes-printemps','recipes-ete','recipes-automne','recipes-toute-annee'])vm.runInContext(fs.readFileSync(path.join(root,'data',f+'.js'),'utf8'),ctx);
+for(const f of ['allergenes','illustrations'])vm.runInContext(fs.readFileSync(path.join(root,f+'.js'),'utf8'),ctx);
 vm.runInContext(fs.readFileSync(path.join(root,'app.js'),'utf8'),ctx);
 const a=ctx.module.exports,by=Object.fromEntries(a.RECETTES.map(r=>[r.i,r])),base=JSON.parse(JSON.stringify(a.getProfil()));let n=0;
 const test=(name,fn)=>{try{fn();n++;}catch(e){console.error('FAIL',name,e.message);process.exitCode=1;}};
