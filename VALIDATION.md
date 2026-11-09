@@ -100,4 +100,4 @@ Périmètre : même produit, mêmes données. Ajouts : `allergenes.js`, `illustr
 
 **Design.** Beige et bordeaux, matières en verre dépoli avec repli opaque, animations courtes coupées par `prefers-reduced-motion`.
 
-Contrôles de la révision 3 : 20 + 484 + 138 + 709 assertions (dont allergènes, illustrations, compléments, régressions œuf-bœuf et lait-laitue), 55 parcours navigateur, 24 contrôles sécurité. Ce sont des tests automatiques, pas des retours d'utilisateurs réels.
+Contrôles de la révision 3 : 20 + 484 + 138 + 715 assertions (1 357 au total) (dont allergènes, illustrations, compléments, régressions œuf-bœuf et lait-laitue), 55 parcours navigateur, 24 contrôles sécurité. Ce sont des tests automatiques, pas des retours d'utilisateurs réels.
