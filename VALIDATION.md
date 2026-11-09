@@ -53,3 +53,34 @@ Limites : CSP en balise meta, pas en en-tête HTTP ; les styles inline sont auto
 ## Non inclus
 
 Comptes multi-appareils, connexion sociale dans l'app, synchronisation, moteur de prix magasin, commande/paiement de courses, catalogue de produits emballés type Yuka, prise en charge clinique des allergies/pathologies/grossesse. Ne pas présenter ces capacités comme terminées.
+
+## Révision nutrition et variété, 9 novembre 2026
+
+### Mesure comparative
+
+60 plans appariés : 12 mois × graines 1 à 5, profil type 2 personnes/4 portions. Médiannes des pourcentages de références hebdomadaires, pour les repas planifiés uniquement :
+
+| Nutriment | V1 plats | Révision plats | Révision avec option fruit/yaourt/amandes |
+| --- | ---: | ---: | ---: |
+| Calcium | 40,1 % | 54,5 % | 98,0 % |
+| Vitamine C | 60,5 % | 70,2 % | 178,6 % |
+| Vitamine D | 41,2 % | 52,5 % | 56,6 % |
+| Vitamine E | 45,9 % | 63,5 % | 129,3 % |
+| Fibres | 67,2 % | 70,5 % | 97,5 % |
+| Protéines | 117,9 % | 117,8 % | 146,4 % |
+
+La vitamine E des plats serait 50,3 % avec l'ancienne référence de 12 mg/j : une partie du passage à 63,5 % vient seulement de la référence actuelle 10/9 mg/j. Les corrections de données et les choix de plats sont inclus dans la comparaison : ce n'est pas un essai clinique.
+
+Prix avec option : médiane 76,17 €, plage 63,80 à 95,80 €, 21 plans sur 60 dépassent 80 €. Il s'agit des hypothèses de prix, pas du montant d'un panier réel. L'option n'est pas ajoutée automatiquement pour améliorer les chiffres. Les plans de plats restent sous 80 € dans ces tests.
+
+Le score limite les gains au-delà d'un seuil interne de 70 % (outil de comparaison, pas repère médical), pénalise les apports les plus faibles et les formes culinaires répétées. Sur les 60 plans, au plus deux plats de type soupe/dahl/curry/ramen par semaine. La classification par nom est une heuristique et ne prouve ni le goût ni la qualité clinique.
+
+### Tests de régression
+
+- 20 contrôles initiaux.
+- 484 assertions groupées des fonctions de production.
+- 138 contrôles nouveaux : compléments sur 12 mois, quantités, tous les nutriments, coût, courses, retrait, exclusions, séparation des semaines, conservation des plans enregistrés, correspondances et variété sur 60 plans.
+- 32 contrôles navigateur : les 28 précédents plus inclusion, persistance, bilan et retrait des compléments.
+- 24 contrôles de sécurité : XSS, stockage corrompu, CSP, absence d'envoi réseau applicatif et confinement du cache.
+
+Les tests ne garantissent ni absence de faille inconnue ni couverture nutritionnelle individuelle. Les plans déjà enregistrés ne sont pas régénérés automatiquement. Les données de composition corrigées et les corrections de recettes s'appliquent aussi aux calculs d'un plan existant. Aucune donnée de foyer n'est envoyée au dépôt.
