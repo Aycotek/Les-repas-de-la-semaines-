@@ -117,9 +117,9 @@ function scorePlan(ids,mois=moisSemaine()) {
   s -= 18 * Math.abs(poisson - 2);            // 2 dîners poisson => 4 occasions/pers (repère : 2)
   if (gras < 1) s -= 14;
   s -= 8 * Math.max(0, 2 - legum);
-  s -= Math.max(0, viandeG - REF.reperes.viandeRouge_g_max_par_semaine) / 25;
-  s -= Math.max(0, charcG - REF.reperes.charcuterie_g_max_par_semaine) / 15;
-  s -= Math.max(0, budget - profil.budget) / 4;
+  s -= Math.max(0, viandeG - REF.reperes.viandeRouge_g_max_par_semaine) * 10;
+  s -= Math.max(0, charcG - REF.reperes.charcuterie_g_max_par_semaine) * 10;
+  s -= Math.max(0, budget - profil.budget) * 10;
   for (const t of Object.values(types)) if (t > 2) s -= 6 * (t - 2);
   // Saisonnalité (contrainte souple) : bonus pour les recettes propres au mois courant
   for (const r of recettes) if ((r.m || []).includes(mois) && (r.m || []).length < 12) s += 4;
