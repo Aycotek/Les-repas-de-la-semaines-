@@ -1,0 +1,8 @@
+# Fichiers locaux / système
+.DS_Store
+Thumbs.db
+node_modules/
+*.log
+# Rien de personnel ni de secret ne doit être commité ici
+.env
+*.key
