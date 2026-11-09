@@ -1,3 +1,7 @@
+# État actuel
+
+Voir CONSOLIDATION300.md pour les résultats de la version300. Le catalogue actuel contient300 recettes. Les comparaisons nutritionnelles de versions antérieures sont historiques et ne remplacent pas ce bilan actuel.
+
 # Validation et limites - 9 novembre 2026
 
 ## Lancer les contrôles
@@ -19,11 +23,11 @@ Les deux suites navigateur utilisent Chrome à `/usr/bin/google-chrome` par déf
 |---|---|---|
 | Semaine de repas | 7 recettes distinctes, dates dîner et déjeuner de restes | Planning par dîner, pas agenda multi-repas |
 | 4 portions = 2 dîner + 2 restes | Agrégation des ingrédients une seule fois ; tests 4/8 portions et bilan | Restes supposés consommés, pas déclaration de consommation réelle |
-| Catalogue | 200 recettes, 40 par saison + 40 toute l'année ; 200 tests d'intégrité | Cuisine non testée physiquement ; étapes parfois courtes |
+| Catalogue | 300 recettes, 60 par saison +60 toute l'année ; 300 tests d'intégrité | Cuisine non testée physiquement ; étapes parfois courtes |
 | Saison si possible | Bonus de score, pas interdiction stricte | Tous les ingrédients d'une recette ne sont pas contrôlés en temps réel |
 | Budget environ 80 € | Calcul quantités × hypothèses €/kg ; 60 semaines testées | Pas un panier Lidl, pas de relevé de prix ni de conditionnement réel |
 | Équilibre | Score nutritionnel et repères poissons/légumineuses/viande/charcuterie ; 60 plans et 7 relances | Optimisation heuristique, aucune garantie nutritionnelle complète |
-| Bilan | 27 nutriments, moyenne par personne, références adultes types et lacunes par nutriment | 657 cellules nutriment absentes (dont ingrédients sans correspondance validée) ; états cru/cuit et pertes de cuisson non harmonisés |
+| Bilan | 27 nutriments, moyenne par personne, références adultes types et lacunes par nutriment | 762 cellules nutriment absentes (dont ingrédients sans correspondance validée) ; états cru/cuit et pertes de cuisson non harmonisés |
 | Ajouts manuels | Articles libres + repas du catalogue ; courses et nutrition recalculées | Pas de saisie libre d'une nouvelle recette ou import de lien |
 | Courses | Sommes par ingrédient, rayon, grammes/kg, cases cochables persistantes | Produits composés et unités magasin non normalisés ; articles libres hors prix/nutrition |
 | Exclusions | Familles développées, appliquées à génération et relance | Pas une garantie allergène/traces ; vérifier les produits |
@@ -35,7 +39,7 @@ Les deux suites navigateur utilisent Chrome à `/usr/bin/google-chrome` par déf
 ## Résultats des suites
 
 - 20 contrôles initiaux de données et plan (inclut certains contrôles redondants, ne constitue pas 20 scénarios indépendants).
-- 484 assertions groupées des fonctions de production : 60 plans (12 mois × 5 graines), limites viande/charcuterie, remplacement, quantités, bilan, prix, exclusions, données manquantes, stockage invalide, dates ISO, intégrité de 200 recettes.
+- 585 assertions groupées des fonctions de production : 60 plans (12 mois × 5 graines), limites viande/charcuterie, remplacement, quantités, bilan, prix, exclusions, données manquantes, stockage invalide, dates ISO, intégrité de 300 recettes.
 - 28 contrôles de parcours navigateur : affichage, détails, relance, rechargement, ajout/suppression article et repas, profil/exclusions/portions, navigation entre semaines, cases cochables, écrans étroits, hors connexion.
 - 24 contrôles défensifs : charges XSS, contenu persisté malformé, identifiants prototype, profil corrompu, CSP, absence d'évaluation dynamique et de scripts externes, isolation du cache.
 - Dépendances de test verrouillées ; audit npm : aucune vulnérabilité connue signalée à la date du contrôle. Aucune dépendance tierce dans l'app à l'exécution.
@@ -78,7 +82,7 @@ Le score limite les gains au-delà d'un seuil interne de 70 % (outil de comparai
 ### Tests de régression
 
 - 20 contrôles initiaux.
-- 484 assertions groupées des fonctions de production.
+- 585 assertions groupées des fonctions de production.
 - 138 contrôles nouveaux : compléments sur 12 mois, quantités, tous les nutriments, coût, courses, retrait, exclusions, séparation des semaines, conservation des plans enregistrés, correspondances et variété sur 60 plans.
 - 32 contrôles navigateur : les 28 précédents plus inclusion, persistance, bilan et retrait des compléments.
 - 24 contrôles de sécurité : XSS, stockage corrompu, CSP, absence d'envoi réseau applicatif et confinement du cache.
@@ -90,14 +94,14 @@ Les tests ne garantissent ni absence de faille inconnue ni couverture nutritionn
 
 Périmètre : même produit, mêmes données. Ajouts : `allergenes.js`, `illustrations.js`, nouveau `styles.css`, onglet Semaine réorganisé.
 
-**Allergies (sécurité).** Les 14 allergènes UE (lupin inclus, affiché mais sans ingrédient au catalogue) sont classés pour chacun des 233 ingrédients (certain « c » ou possible selon la marque « p » pour les produits transformés). Une allergie cochée exclut aussi le « possible ». Un test échoue si un ingrédient n'est pas classé. Pour chaque allergène, 12 mois x 3 graines : aucun plan généré ni repas relancé ne contient l'allergène. Si la table d'allergènes manque, une allergie exclut tout (échec fermé). Les anciens réglages sont migrés vers des exclusions au moins aussi strictes.
+**Allergies (sécurité).** Les 14 allergènes UE (lupin inclus, affiché mais sans ingrédient au catalogue) sont classés pour chacun des 252 ingrédients (certain « c » ou possible selon la marque « p » pour les produits transformés). Une allergie cochée exclut aussi le « possible ». Un test échoue si un ingrédient n'est pas classé. Pour chaque allergène, 12 mois x 3 graines : aucun plan généré ni repas relancé ne contient l'allergène. Si la table d'allergènes manque, une allergie exclut tout (échec fermé). Les anciens réglages sont migrés vers des exclusions au moins aussi strictes.
 
 **Limites dites.** Filtre indicatif, pas une garantie médicale : traces, contamination croisée, recettes industrielles qui changent, noix de coco (non incluse dans « fruits à coque » dans la liste UE), lupin (aucun ingrédient au catalogue). Classification faite à la main par l'application, pas relue par un allergologue ni un diététicien.
 
 **Aversions.** Séparées des allergies (goût, pas sécurité) : porc, bœuf, veau/agneau, volaille, toute viande, poisson, fruits de mer, champignons, coriandre, oignon/ail, olives, choux, coco, alcool, os/moelle, épices ; plus un aliment libre (ex. courgette).
 
-**Illustrations.** Dessins vectoriels générés à partir des ingrédients de chaque recette (200/200 valides, déterministes, sans image externe ni droit tiers). Ce ne sont pas des photos : l'étiquette « Dessin illustratif » est affichée.
+**Illustrations.** Dessins vectoriels non génératifs adaptés aux ingrédients et à la préparation de chaque recette (300/300 valides, déterministes, sans image externe ni droit tiers). Ce ne sont pas des photos : l'étiquette « Dessin illustratif » est affichée.
 
 **Design.** Beige et bordeaux, matières en verre dépoli avec repli opaque, animations courtes coupées par `prefers-reduced-motion`.
 
-Contrôles de la révision 3 : 20 + 484 + 138 + 715 assertions (1 357 au total) (dont allergènes, illustrations, compléments, régressions œuf-bœuf et lait-laitue), 55 parcours navigateur, 24 contrôles sécurité. Ce sont des tests automatiques, pas des retours d'utilisateurs réels.
+Contrôles de la révision 3 : 20 +585 +138 +717 assertions (1 460 au total) (dont allergènes, illustrations, compléments, régressions œuf-bœuf et lait-laitue), 55 parcours navigateur, 24 contrôles sécurité. Ce sont des tests automatiques, pas des retours d'utilisateurs réels.
