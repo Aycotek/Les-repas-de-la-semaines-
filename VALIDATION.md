@@ -28,7 +28,7 @@ Les deux suites navigateur utilisent Chrome à `/usr/bin/google-chrome` par déf
 | Budget environ 80 € | Calcul quantités × hypothèses €/kg ; 60 semaines testées | Pas un panier Lidl, pas de relevé de prix ni de conditionnement réel |
 | Équilibre | Score nutritionnel et repères poissons/légumineuses/viande/charcuterie ; 60 plans et 7 relances | Optimisation heuristique, aucune garantie nutritionnelle complète |
 | Bilan | 27 nutriments, moyenne par personne, références adultes types et lacunes par nutriment | 762 cellules nutriment absentes (dont ingrédients sans correspondance validée) ; états cru/cuit et pertes de cuisson non harmonisés |
-| Ajouts manuels | Articles libres + repas du catalogue ; courses et nutrition recalculées | Pas de saisie libre d'une nouvelle recette ou import de lien |
+| Ajouts manuels | Articles libres + plats du catalogue avec choix explicite : remplacer un des 7 dîners prévus ou ajouter un 8e repas (réception) ; courses et nutrition recalculées dans les deux cas | Pas de saisie libre d'une nouvelle recette ou import de lien |
 | Courses | Sommes par ingrédient, rayon, grammes/kg, cases cochables persistantes | Produits composés et unités magasin non normalisés ; articles libres hors prix/nutrition |
 | Exclusions | Familles développées, appliquées à génération et relance | Pas une garantie allergène/traces ; vérifier les produits |
 | Matériel et temps | Alerte matériel et alternative ; recette >60 min signalée | Pas d'équivalent universel au four, ni test réel de cuisson |
