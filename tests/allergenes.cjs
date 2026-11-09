@@ -34,10 +34,10 @@ test('migration anciens réglages: au moins aussi prudente',()=>{store.ns_profil
 test('table allergènes absente: allergie => tout est exclu (échec fermé)',()=>{const c=ctx.allergenesDe;ctx.allergenesDe=undefined;assert.equal(a.estExclue(a.RECETTES[0],['allergen:lait']),true);ctx.allergenesDe=c;});
 test('illustrations: SVG valide pour les 200 recettes',()=>{for(const r of a.RECETTES){const s=ctx.illustrationPlat(r);assert.ok(s.startsWith('<svg')&&s.endsWith('</svg>'),r.i);assert.ok(!/NaN|undefined/.test(s),r.i);assert.ok(!/<script|onerror|href=/i.test(s),r.i);}});
 test('illustrations: aucune tache blanche pleine (risque de faire croire à un œuf)',()=>{for(const r of a.RECETTES){const s=ctx.illustrationPlat(r);assert.ok(!s.includes('fill="#fff"'),r.i);}});
-test('illustrations: œuf dessiné seulement si la recette contient un ingrédient œuf',()=>{for(const r of a.RECETTES){const s=ctx.illustrationPlat(r);const dessine=s.includes('#f2b632')||s.includes('#fffaf0');const aOeuf=r.ing.some(([k])=>/^oeuf/.test(k));assert.ok(!dessine||aOeuf,'œuf dessiné sans ingrédient œuf: '+r.i);if(aOeuf)assert.ok(s.includes('œuf'),'étiquette sans mention œuf: '+r.i);}});
+test('illustrations: œuf dessiné seulement si la recette contient un ingrédient œuf',()=>{for(const r of a.RECETTES){const s=ctx.illustrationPlat(r);const dessine=s.includes('#f2b632')||s.includes('#fffaf0');const aOeuf=r.ing.some(([k])=>/^oeuf/.test(k));assert.ok(!dessine||aOeuf,'œuf dessiné sans ingrédient œuf: '+r.i);if(aOeuf&&dessine)assert.ok(s.includes('œuf'),'étiquette sans mention œuf visible: '+r.i);}});
 test('fruits de mer : type dédié, jamais comptés comme poisson',()=>{
  const poissonIng=/^(cabillaud|colin|hareng|lieu_jaune|loup|maquereau|merlan|merlu|morue|raie|rouget|sardine|saumon|thon|truite|anchois)/;
- const coquille=/^(crabe|crevette|encornet|moule|poulpe|seiche)/;
+ const coquille=/^(crabe|crevette|encornet|moule|poulpe|seiche|palourde|noix_saint_jacques)/;
  for(const r of a.RECETTES){
   const aPoisson=r.ing.some(([k])=>poissonIng.test(k)), aCoquille=r.ing.some(([k])=>coquille.test(k));
   if(aCoquille&&!aPoisson)assert.equal(r.t,'fruits_mer','coquillages sans poisson mal typés: '+r.i);
@@ -68,6 +68,12 @@ test('allergie œufs ne touche pas le bœuf',()=>{assert.equal(a.estExclue(R('bo
 test('allergie lait ne touche pas la laitue ni le lait de coco',()=>{for(const k of ['laitue','laitue_romaine','lait_de_coco'])assert.equal(a.estExclue(R(k),['allergen:lait']),false,k);assert.equal(a.estExclue(R('lait'),['allergen:lait']),true);});
 test('mot libre oeuf/lait: mots entiers seulement',()=>{assert.equal(a.estExclue(R('boeuf_a_poeler'),['mot:oeuf']),false);assert.equal(a.estExclue(R('oeuf'),['mot:oeuf']),true);assert.equal(a.estExclue(R('oeuf'),['mot:oeufs']),true);assert.equal(a.estExclue(R('laitue'),['mot:lait']),false);assert.equal(a.estExclue(R('lait'),['mot:lait']),true);assert.equal(a.estExclue(R('courgette'),['mot:courgettes']),true);});
 test('ancien format oeuf/lait: plus de faux positifs',()=>{assert.equal(a.estExclue(R('boeuf_a_poeler'),['oeuf']),false);assert.equal(a.estExclue(R('laitue'),['lait|yaourt']),false);assert.equal(a.estExclue(R('creme_fraiche'),['lait|yaourt|beurre|creme|fromage']),true);});
-test('aucune des 200 recettes de bœuf exclue par « œufs »',()=>{const exc=['allergen:oeuf'];for(const r of a.RECETTES){const aOeuf=r.ing.some(([k])=>k==='oeuf')||ctx.allergenesDe(r.ing).p.includes('oeuf');assert.equal(a.estExclue(r,exc),aOeuf,r.i);}});
+test('aucune des 200 recettes de bœuf exclue par « œufs »',()=>{const exc=['allergen:oeuf'];for(const r of a.RECETTES){const aOeuf=r.ing.some(([k])=>k==='oeuf')||ctx.allergenesDe(r.ing).p.includes('oeuf')||ctx.allergenesDe(r.ing).c.includes('oeuf');assert.equal(a.estExclue(r,exc),aOeuf,r.i);}});
 test('aucune recette avec laitue exclue à tort pour le lait',()=>{const exc=['allergen:lait'];for(const r of a.RECETTES){const x=ctx.allergenesDe(r.ing);assert.equal(a.estExclue(r,exc),x.c.includes('lait')||x.p.includes('lait'),r.i);}});
+
+
+// Forme culinaire : préserver l'œuf cuisiné sans inventer un œuf entier dans un liant.
+test('omelette, tortilla et piperade gardent une forme œuf battu cuit',()=>{for(const id of ['e45','e51','t51']){const svg=ctx.illustrationPlat(by[id]);assert.ok(svg.includes('data-forme="oeuf-battu"'),id);assert.ok(svg.includes('œuf battu cuit'),id);assert.ok(!svg.includes('#f2b632'),id+' ne doit pas montrer de jaune entier');}});
+test('œuf liant de chou farci et quiche ne devient pas œuf entier',()=>{for(const id of ['a43','t14','h10','p07']){const svg=ctx.illustrationPlat(by[id]);assert.ok(!svg.includes('#f2b632'),id);assert.ok(!svg.includes('data-forme="oeuf-battu"'),id);}});
+
 console.log(`${n} contrôles allergènes/illustrations passés.`);
