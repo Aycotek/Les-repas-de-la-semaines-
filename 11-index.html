@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#6b1d2c">
+<title>Les repas de la semaine</title>
+<meta name="description" content="Sept dîners équilibrés par semaine, adaptés à tes allergies et à ce que tu n'aimes pas : nutrition ANSES/PNNS, saison, budget et liste de courses.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="fond-deco" aria-hidden="true"><i></i><i></i><i></i></div>
+<header class="entete">
+  <div class="marque"><span class="logo" aria-hidden="true"></span><h1>Les repas de la semaine</h1></div>
+  <div class="semaine-nav">
+    <button id="semPrec" aria-label="Semaine précédente">‹</button>
+    <span id="semLabel"></span>
+    <button id="semSuiv" aria-label="Semaine suivante">›</button>
+  </div>
+</header>
+<nav class="onglets" role="tablist">
+  <button data-vue="semaine" class="actif" role="tab">Semaine</button>
+  <button data-vue="bilan" role="tab">Bilan</button>
+  <button data-vue="courses" role="tab">Courses</button>
+  <button data-vue="profil" role="tab">Foyer</button>
+</nav>
+<main>
+  <section id="vue-semaine" class="vue actif"></section>
+  <section id="vue-bilan" class="vue"></section>
+  <section id="vue-courses" class="vue"></section>
+  <section id="vue-profil" class="vue"></section>
+</main>
+<footer class="pied">
+  <p>Dessins générés par l'application (illustrations, pas des photos). Allergènes : liste UE, filtre indicatif. Nutriments : table CIQUAL 2020 (ANSES, Licence Ouverte). Repères : ANSES/PNNS. Prix : estimations indicatives, pas des prix magasin. Voir <a href="SOURCES.md">SOURCES.md</a>.</p>
+</footer>
+<script src="data/references.js"></script>
+<script src="data/ingredients.js"></script>
+<script src="data/recipes-hiver.js"></script>
+<script src="data/recipes-printemps.js"></script>
+<script src="data/recipes-ete.js"></script>
+<script src="data/recipes-automne.js"></script>
+<script src="data/recipes-toute-annee.js"></script>
+<script src="allergenes.js"></script>
+<script src="illustrations.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
