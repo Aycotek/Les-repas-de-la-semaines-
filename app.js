@@ -264,6 +264,7 @@ function rendreHero() {
 function memoriserPlan() { stockage.setItem("ns_plan_prev_" + cleSemaine(), JSON.stringify(plan)); }
 function planPrecedent() { try { const p = JSON.parse(stockage.getItem("ns_plan_prev_" + cleSemaine()) || "null"); return Array.isArray(p) && p.length && p.every(i => typeof i === "string" && RECETTE_PAR_ID[i]) ? p : null; } catch { return null; } }
 const optionsRepas = q => { const m = norm(q).trim(); return RECETTES.filter(r => !estExclue(r, profil.exclusions) && (!m || norm(r.n).includes(m))).slice(0, 200).map(r => `<option value="${r.i}">${esc(r.n)}</option>`).join("") || `<option value="" disabled selected>Aucun plat ne correspond</option>`; };
+const optionsRemplacement = () => plan.map((pid, idx) => { const d = new Date(semaine); d.setDate(d.getDate() + idx); return `<option value="${idx}">${esc(d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "short" }))} — ${esc(RECETTE_PAR_ID[pid].n)}</option>`; }).join("");
 document.addEventListener("input", e => { if (e.target.id === "filtreRepas") $("#ajoutRepas").innerHTML = optionsRepas(e.target.value); });
 function generer() {
  const n = nbCompatibles();
@@ -384,7 +385,7 @@ function rendreSemaine() {
   $("#vue-semaine").innerHTML = rendreHero() +
     `<div class="bandeau-budget"><span>Budget estimé des menus sélectionnés<br><small class="note">hypothèses indicatives, quantités utilisées, pas un panier magasin</small></span>
      <span class="montant ${budget > profil.budget ? "ko" : "ok"}">${eur(budget)}</span></div>` + `<div class="liste-repas${classeAnim}">` + cartes + `</div>` +
-    `<div class="carte complements"><h2>Compléter les repas, pas seulement le plat</h2><p class="note">Proposition facultative : par portion, 150 g de fruit de saison, 125 g de yaourt nature et 10 g d'amandes. Sur 7 recettes de ${profil.portionsParRecette} portions, les restes sont déjà inclus. Ce ne sont pas des portions supplémentaires de plat. Exclus : produits laitiers ou fruits à coque si cochés dans le panneau Allergies et exclusions.</p><button class="petit" id="toggleComplements">${complementsActifs()?"Retirer les compléments":"Ajouter ces compléments à la semaine"}</button>${complementsActifs()?`<p class="note">Inclus dans les courses, le coût et le bilan : ${[...new Set(complements().map(([k])=>ING[k].nom))].join(", ")}. Coût indicatif : ${eur(coutComplements())}. Le bilan reste partiel, surtout pour la vitamine D.</p>`:`<p class=note>Aucun ajout dans les courses ou le bilan tant que tu n’as pas choisi de les inclure. Coût supplémentaire indicatif : ${eur(coutComplements(true))}. ${budget+coutComplements(true)>profil.budget?"Attention : le total dépasserait le budget cible, même avec les prix indicatifs.":""}</p>`}</div><div class="carte"><h2>Repas ajoutés à la semaine</h2><p class="note">Chaque ajout correspond à une recette entière de ${profil.portionsParRecette} portions. Courses, coût et nutrition inclus ; aucun ajout automatique aux 7 dîners.</p>${repasManuels().map((id,i)=>`<p>${esc(RECETTE_PAR_ID[id].n)} <button class="petit" data-act="supprRepas" data-idx="${i}">Retirer le repas</button></p>`).join("")}<form id="formRepas" class="ajout"><label for="filtreRepas" class="sr-only">Chercher un plat</label><input id="filtreRepas" type="search" maxlength="40" placeholder="Chercher un plat (ex. curry, saumon)…" autocomplete="off"><label for="ajoutRepas" class="sr-only">Recette à ajouter</label><select id="ajoutRepas">${optionsRepas("")}</select><button>Ajouter ce repas</button></form></div><p class="note">Saison favorisée pour ${REF.mois[mois - 1]} (France métropolitaine), sans exclusion stricte des autres saisons. Hypothèses de l'app : prix indicatifs (pas des prix magasin), composition selon correspondances CIQUAL (états cru/cuit variables), pertes de cuisson non modélisées, 2 personnes par défaut.</p>`;
+    `<div class="carte complements"><h2>Compléter les repas, pas seulement le plat</h2><p class="note">Proposition facultative : par portion, 150 g de fruit de saison, 125 g de yaourt nature et 10 g d'amandes. Sur 7 recettes de ${profil.portionsParRecette} portions, les restes sont déjà inclus. Ce ne sont pas des portions supplémentaires de plat. Exclus : produits laitiers ou fruits à coque si cochés dans le panneau Allergies et exclusions.</p><button class="petit" id="toggleComplements">${complementsActifs()?"Retirer les compléments":"Ajouter ces compléments à la semaine"}</button>${complementsActifs()?`<p class="note">Inclus dans les courses, le coût et le bilan : ${[...new Set(complements().map(([k])=>ING[k].nom))].join(", ")}. Coût indicatif : ${eur(coutComplements())}. Le bilan reste partiel, surtout pour la vitamine D.</p>`:`<p class=note>Aucun ajout dans les courses ou le bilan tant que tu n’as pas choisi de les inclure. Coût supplémentaire indicatif : ${eur(coutComplements(true))}. ${budget+coutComplements(true)>profil.budget?"Attention : le total dépasserait le budget cible, même avec les prix indicatifs.":""}</p>`}</div><div class="carte ajout-plat"><h2>Ajouter un plat au menu</h2><p class="note">À chaque ajout, tu choisis : <strong>remplacer</strong> l'un des 7 dîners prévus (le nouveau plat prend sa place, la semaine reste à 7) ou <strong>ajouter un 8e repas</strong>, pour les fois où tu reçois du monde. Courses, coût et bilan suivent ce choix.</p><form id="formRepas" class="ajout"><label for="filtreRepas" class="sr-only">Chercher un plat</label><input id="filtreRepas" type="search" maxlength="40" placeholder="Chercher un plat (ex. curry, saumon)…" autocomplete="off"><label for="ajoutRepas" class="sr-only">Plat à ajouter</label><select id="ajoutRepas">${optionsRepas("")}</select><fieldset class="choix-ajout"><legend>Remplacer ou ajouter ?</legend><label class="choix"><input type="radio" name="modeAjout" value="remplacer" checked> Remplacer un dîner prévu</label><label class="choix-cible" for="cibleRemplacement"><span class="sr-only">Dîner à remplacer</span><select id="cibleRemplacement">${optionsRemplacement()}</select></label><label class="choix"><input type="radio" name="modeAjout" value="huitieme"> Ajouter un 8e repas (exception, quand tu reçois)</label></fieldset><button>Ajouter ce plat</button></form>${repasManuels().length ? `<div class="repas-plus"><h3>Repas en plus cette semaine</h3><p class="note">Chaque repas en plus est une recette entière de ${profil.portionsParRecette} portions : il s'ajoute aux 7 dîners dans les courses, le coût et le bilan.</p>${repasManuels().map((id,i)=>`<p class="ligne-repas-plus">${esc(RECETTE_PAR_ID[id].n)} <button class="petit" data-act="supprRepas" data-idx="${i}">Retirer le repas</button></p>`).join("")}</div>` : ""}</div><p class="note">Saison favorisée pour ${REF.mois[mois - 1]} (France métropolitaine), sans exclusion stricte des autres saisons. Hypothèses de l'app : prix indicatifs (pas des prix magasin), composition selon correspondances CIQUAL (états cru/cuit variables), pertes de cuisson non modélisées, 2 personnes par défaut.</p>`;
 }
 
 function bilanPlan() {
@@ -592,7 +593,30 @@ function rendreTout() {
  const total=idsComplets().reduce((t,id)=>t+coutRecette(RECETTE_PAR_ID[id])*profil.portionsParRecette/4,0)+coutComplements();
  $(".montant").textContent=eur(total);$(".montant").classList.toggle("ko",total>profil.budget);$(".montant").classList.toggle("ok",total<=profil.budget);
  $("#toggleComplements").addEventListener("click",()=>{stockage.setItem("ns_complements_"+cleSemaine(),complementsActifs()?"non":"oui");resetCoches();rendreTout();});
- $("#formRepas").addEventListener("submit",e=>{e.preventDefault();const id=$("#ajoutRepas").value;if(!RECETTE_PAR_ID[id] || repasManuels().length>=40)return;resetCoches();const l=repasManuels();l.push(id);stockage.setItem("ns_repas_"+cleSemaine(),JSON.stringify(l));rendreTout();});
+ $("#formRepas").addEventListener("submit",e=>{
+  e.preventDefault();
+  const id=$("#ajoutRepas").value;if(!RECETTE_PAR_ID[id])return;
+  const nom=RECETTE_PAR_ID[id].n;
+  const mode=(document.querySelector("input[name=modeAjout]:checked")||{}).value||"remplacer";
+  if(mode==="huitieme"){
+   if(repasManuels().length>=40)return;
+   resetCoches();const l=repasManuels();l.push(id);
+   stockage.setItem("ns_repas_"+cleSemaine(),JSON.stringify(l));
+   messageGen=`« ${nom} » ajouté en 8e repas : il s'ajoute aux 7 dîners dans les courses, le coût et le bilan.`;
+   rendreTout();return;
+  }
+  const idx=+($("#cibleRemplacement").value||0);
+  if(!Number.isInteger(idx)||idx<0||idx>=plan.length)return;
+  if(plan[idx]===id){messageGen=`« ${nom} » est déjà le dîner prévu ce jour-là.`;rendreTout();return;}
+  if(plan.includes(id)){messageGen=`« ${nom} » est déjà prévu un autre jour cette semaine. Pour le servir deux fois, ajoute-le en 8e repas.`;rendreTout();return;}
+  resetCoches();memoriserPlan();
+  const ancien=RECETTE_PAR_ID[plan[idx]].n;
+  plan=plan.slice();plan[idx]=id;
+  stockage.setItem("ns_plan_"+cleSemaine(),JSON.stringify(plan));
+  const d=new Date(semaine);d.setDate(d.getDate()+idx);
+  messageGen=`« ${nom} » remplace « ${ancien} » au dîner du ${d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"short"})}. Courses et bilan mis à jour (le bouton Annuler permet de revenir en arrière).`;
+  rendreTout();
+ });
  if (focusApres) { const f = document.querySelector(focusApres); focusApres = ""; if (f && f.focus) f.focus(); }
  if(!stockageDisponible) $("#vue-semaine").innerHTML = '<p role="alert" class="alternatives">Stockage local indisponible : tes changements peuvent être perdus à la fermeture.</p>'+$("#vue-semaine").innerHTML;
 }
