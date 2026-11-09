@@ -39,3 +39,24 @@
 Les portions et les grammes sont calculés sur les quantités de recette. Les correspondances CIQUAL utilisent parfois un état cru, cuit ou appertisé ; les pertes de cuisson, la biodisponibilité et la cuisson exacte ne sont pas modélisées. Une somme partielle est affichée avec son nombre de données absentes par nutriment. Elle ne prouve ni une couverture réelle ni une carence. Le bilan porte uniquement sur les recettes choisies, ajouts compris. Les articles de courses libres ne sont ni chiffrés ni inclus dans le bilan. Les exclusions sont des filtres de préférences et ne garantissent pas l’absence d’allergène ou de traces.
 
 Les repères protéiques utilisent 0,83 g/kg/j et des adultes types de 70 et 60 kg alternés selon la taille du foyer, affichés dans les réglages. Ni l’âge, ni une grossesse, ni une pathologie ne sont modélisés.
+
+## Révision nutrition du 9 novembre 2026
+
+- Références actualisées de vitamine E : AS 10 mg/j homme, 9 mg/j femme. La modification du pourcentage ne représente pas un ajout de nourriture. Calcium 950 mg/j à partir de 25 ans ; vitamine D 15 µg/j. Fer féminin 16 mg/j correspond aux pertes menstruelles élevées, pas à toutes les femmes.
+- Source primaire : https://www.anses.fr/fr/article/references-nutritionnelles-vitamines-mineraux
+- Diversifier la semaine et compléter le plat avec fruits/laitages : https://www.mangerbouger.fr/manger-mieux/se-faire-plaisir-en-mangeant-equilibre/manger-equilibre-ca-veut-dire-quoi-et-comment-y-arriver/comment-varier-son-alimentation-sur-la-semaine
+- Calcium : https://www.anses.fr/fr/article/calcium-pourquoi-comment-consommer
+- Vitamine D : https://www.anses.fr/fr/article/vitamine-pourquoi-comment-assurer-apport-suffisant
+- Poisson : https://www.anses.fr/fr/article/manger-du-poisson-pourquoi-comment
+
+### Qualité des correspondances
+
+Chaque ingrédient expose désormais `sourceNom`, `etat` et `correspondance`. Ce sont des correspondances alimentaires, pas une analyse du produit acheté. Correction des pommes de terre génériques vers l'aliment cru, du riz complet vers le riz brun cru et des coques de vol-au-vent vers la pâte feuilletée cuite (approximation de la coque seule). La pâte à pain de la flammekueche est maintenant décomposée en 200 g farine + 100 g eau, au lieu de compter 300 g de farine.
+
+Pas de correspondance validée : os à moelle, galette de riz pour rouleaux, sauce huître, ortie, pâte à pain générique. Leurs nutriments deviennent `null`, pas ceux d'un autre produit. Les recettes concernées restent disponibles et portent l'avertissement de bilan incomplet. Le gratin à la moelle est accompagné de pain complet explicite. Les autres approximations sont signalées dans les détails des recettes (burrata/mozzarella, pâtes de curry/sauce curry, certains pains complets/pains standards, etc.). Les aliments complets ne sont donc pas toujours représentés exactement par leur produit source.
+
+### Compléments alimentaires au sens aliments du repas
+
+L'option facultative ajoute réellement, par portion prévue : 150 g de fruit, 125 g de yaourt nature, 10 g d'amandes. Sur 28 portions, 4,2 kg de fruits, 3,5 kg de yaourts et 280 g d'amandes. Elle est désactivée par défaut, isolée par semaine, filtrée par exclusions et réversible. Prix, quantités et nutriments sont comptés une seule fois. Cela peut dépasser 80 € : l'app montre le coût avant ajout, puis le total. Aucun supplément vitaminique, diagnostic ou prescription.
+
+La vitamine D peut rester basse même avec l'option. https://www.anses.fr/fr/article/vitamine-pourquoi-comment-assurer-apport-suffisant rappelle que la référence alimentaire exclut la contribution de l'exposition au soleil ; ce logiciel ne mesure pas le statut biologique.
