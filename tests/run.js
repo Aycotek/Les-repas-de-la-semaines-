@@ -63,6 +63,7 @@ const elt = () => ({ innerHTML: "", textContent: "", value: "", classList: { tog
   addEventListener() {}, querySelector: () => elt(), closest: () => elt(), dataset: {} });
 global.document = { querySelector: () => elt(), querySelectorAll: () => [], addEventListener() {} };
 
+eval(fs.readFileSync(R("allergenes.js"), "utf8")); eval(fs.readFileSync(R("illustrations.js"), "utf8"));
 eval(fs.readFileSync(R("app.js"), "utf8")); // génère un plan au chargement
 
 const plan = JSON.parse(stockage[Object.keys(stockage).find(k => k.startsWith("ns_plan_"))]);
