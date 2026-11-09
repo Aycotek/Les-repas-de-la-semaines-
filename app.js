@@ -37,7 +37,7 @@ const ALT_MATERIEL = { cuit_vapeur: "casserole + passoire", mixeur: "couteau (ha
 /* ---------- Profil foyer (localStorage, données qui restent sur cet appareil) ---------- */
 const PROFIL_DEFAUT = { personnes: [
     { sexe: "homme", poids: 70 }, { sexe: "femme", poids: 60 }],
-  exclusions: [], materiel: ["four", "poele", "casserole", "saladier", "cocotte", "sauteuse", "raclette"],
+  exclusions: [], materiel: ["four", "poele", "casserole", "saladier", "cocotte", "sauteuse"],
   budget: 80, portionsParRecette: 4 };
 let stockageDisponible = true;
 const stockage = {
@@ -53,20 +53,12 @@ function migrerExclusions(l) {
   "noix|noisette|amande|pignons|cacahuete|sesame":["allergen:fruits_a_coque","allergen:arachide","allergen:sesame"]};
  const out=[];for(const x of l){for(const y of (M[x]||[x]))if(!out.includes(y))out.push(y);}return out;
 }
-// V2 : l'appareil à raclette est un équipement à part entière. Anciens réglages (sans version) : l'utilisateur a indiqué que le foyer en a un, il est ajouté une seule fois, décochable ensuite.
-function migrerMateriel(p) {
- if (!Array.isArray(p.materiel)) return [...PROFIL_DEFAUT.materiel];
- const m = p.materiel.filter(x=>typeof x==="string");
- if (p.materielVersion !== 2 && !m.includes("raclette")) m.push("raclette");
- return m;
-}
 function chargerProfil() {
  let p; try { p = JSON.parse(stockage.getItem("ns_profil") || "{}"); } catch { p = {}; }
  if (!p || typeof p !== "object") p = {};
  return { personnes: Array.from({length:entier(p.personnes?.length || 2,1,8,2)},(_,i)=>({sexe:i%2?"femme":"homme",poids:i%2?60:70})),
  exclusions: migrerExclusions(Array.isArray(p.exclusions) ? p.exclusions.filter(x=>typeof x==="string").slice(0,40) : []),
- materiel: migrerMateriel(p),
- materielVersion: 2,
+ materiel: Array.isArray(p.materiel) ? p.materiel.filter(x=>typeof x==="string") : [...PROFIL_DEFAUT.materiel],
  budget: entier(p.budget ?? 80,20,300,80), portionsParRecette:entier(p.portionsParRecette ?? 4,2,12,4) };
 }
 function sauverProfil(p) { stockage.setItem("ns_profil", JSON.stringify(p)); }
