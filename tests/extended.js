@@ -12,6 +12,7 @@ const test=(name,fn)=>{try{fn();n++;}catch(e){console.error('FAIL',name,e.messag
 const near=(x,y)=>assert.ok(Math.abs(x-y)<1e-7,`${x} != ${y}`);
 for(let month=1;month<=12;month++)for(let seed=1;seed<=5;seed++){
  const p=a.genererPlan(month,seed);a.setPlan(p);
+ test(`plan ${month}/${seed} limites viande/charcuterie`,()=>{const rouge=k=>/^(boeuf|veau|agneau|cote_agneau|porc|saucisse_toulouse|merguez)/.test(k);const charc=k=>/^(lardons|jambon_|saucisse_fumee|saucisse_toulouse|merguez)/.test(k);let r=0,c=0;for(const id of p)for(const[k,g]of by[id].ing){if(rouge(k))r+=g/2;if(charc(k))c+=g/2;}assert.ok(r<=500);assert.ok(c<=150);});
  test(`plan ${month}/${seed} intégrité`,()=>{assert.equal(p.length,7);assert.equal(new Set(p).size,7);assert.ok(p.every(id=>by[id]));});
  test(`plan ${month}/${seed} budget`,()=>assert.ok(Object.values(a.listeCourses()).reduce((s,x)=>s+x.prix,0)<=80));
  test(`plan ${month}/${seed} poisson/légumineuses`,()=>{assert.equal(p.filter(id=>by[id].t.startsWith('poisson')).length,2);assert.ok(p.some(id=>by[id].t==='poisson_gras'));assert.ok(p.filter(id=>a.contientLegumineuses(by[id])).length>=2);});
@@ -39,6 +40,7 @@ for(const exc of ['poisson','lait|beurre|creme|fromage|comte|parmesan','noix|ama
 }
 a.setProfil(base);
 const withNull=a.RECETTES.find(r=>a.nutrimentsRecette(r).manquants>0);
+test('poisson gras possède un ingrédient gras identifié',()=>{for(const r of a.RECETTES.filter(r=>r.t==='poisson_gras'))assert.ok(r.ing.some(([k])=>/^(saumon|maquereau|sardine|hareng|truite)/.test(k)));});
 test('données manquantes suivies par nutriment',()=>{const x=a.nutrimentsRecette(withNull);assert.ok(x.manquants>0);assert.equal(Object.values(x.absents).reduce((s,n)=>s+n,0),x.manquants);assert.ok(Object.values(x.t).every(Number.isFinite));});
 test('539 valeurs source absentes ne deviennent pas zéro',()=>{assert.ok(Object.values(a.ING).some(i=>Object.values(i).includes(null)));});
 for(const invalid of ['null','{}','["inconnu"]','[1,2]','["'+p[0]+'","'+p[0]+'"]']){
