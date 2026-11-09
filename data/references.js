@@ -4,10 +4,10 @@ globalThis.REFERENCES = {
   rnp: {
     homme: { proteines_g_par_kg: 0.83, fibres_g: 30, calcium_mg: 950, fer_mg: 11, magnesium_mg: 420,
       potassium_mg: 3500, zinc_mg: 11.7, selenium_ug: 70, vitamineC_mg: 110, vitamineD_ug: 15,
-      vitamineB9_ug: 330, vitamineB12_ug: 4, vitamineE_mg: 12, vitamineB1_mg: 1.2, vitamineB6_mg: 1.7 },
+      vitamineB9_ug: 330, vitamineB12_ug: 4, vitamineE_mg: 10, vitamineB1_mg: 1.2, vitamineB6_mg: 1.7 },
     femme: { proteines_g_par_kg: 0.83, fibres_g: 30, calcium_mg: 950, fer_mg: 16, magnesium_mg: 360,
       potassium_mg: 3500, zinc_mg: 9.3, selenium_ug: 70, vitamineC_mg: 110, vitamineD_ug: 15,
-      vitamineB9_ug: 330, vitamineB12_ug: 4, vitamineE_mg: 12, vitamineB1_mg: 1.1, vitamineB6_mg: 1.6 }
+      vitamineB9_ug: 330, vitamineB12_ug: 4, vitamineE_mg: 9, vitamineB1_mg: 1.1, vitamineB6_mg: 1.6 }
   },
   poidsReference: { homme: 70, femme: 60 },
   limites: { sel_g: 5, ags_pct_energie: 12, sucres_libres_g: 50 },
