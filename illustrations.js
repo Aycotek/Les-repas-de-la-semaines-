@@ -67,8 +67,8 @@ globalThis.illustrationPlat=function(r){
  s+=`<circle cx="${cx}" cy="${cy}" r="${pr}" fill="url(#${uid}a)"/><circle cx="${cx}" cy="${cy}" r="${pr-12}" fill="url(#${uid}b)" stroke="#e2d3b8" stroke-width="1.5"/>`;
  if(bol){
   const col=fond(cats);
-  s+=`<circle cx="${cx}" cy="${cy}" r="${pr-22}" fill="${col}"/><circle cx="${cx}" cy="${cy}" r="${pr-22}" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3"/><ellipse cx="${cx-18}" cy="${cy-24}" rx="30" ry="12" fill="#fff" opacity=".22"/>`;
-  const garn=cats.filter(c=>!["grain","legumineuse"].includes(c)).slice(0,3);
+  s+=`<circle cx="${cx}" cy="${cy}" r="${pr-22}" fill="${col}"/><circle cx="${cx}" cy="${cy}" r="${pr-22}" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3"/><path d="M${cx-40} ${cy-30}a56 56 0 0 1 30 -18" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round" fill="none"/>`;
+  const garn=cats.filter(c=>!["grain","legumineuse"].includes(c)).slice(0,5);
   for(let i=0;i<13;i++){const a=R()*6.28,d=R()*(pr-50);const c=garn.length?garn[i%garn.length]:"vert";s+=P[c](cx+Math.cos(a)*d,cy+Math.sin(a)*d,8+R()*4,R);}
   if(!/froid/i.test(r.n))s+=`<g class="vapeur" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".7"><path d="M150 38q-8 -10 0 -20t0 -16"/><path d="M180 34q-8 -10 0 -20t0 -16"/><path d="M210 38q-8 -10 0 -20t0 -16"/></g>`;
  } else {
