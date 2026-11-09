@@ -19,7 +19,7 @@ try{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');ok(!/script[^>]+https?:/i.test(html),'pas script externe');ok(html.includes("script-src 'self'"),'scripts CSP limités même origine');ok(html.includes("object-src 'none'"),'objets intégrés interdits');
  // Worker : seules nos versions sont supprimées, seules nos ressources sont interceptées.
  const handlers={},deleted=[];let pending;const scope='https://example.test/repas/';const prefix='repas-'+encodeURIComponent(scope)+'-';
- const ctx={URL,encodeURIComponent,self:{registration:{scope},location:{origin:'https://example.test'},addEventListener:(k,f)=>handlers[k]=f,clients:{claim:()=>Promise.resolve()}},caches:{keys:async()=>['autre-app-cache',prefix+'v1',prefix+'v3'],delete:async k=>deleted.push(k)},Promise};vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(root,'sw.js'),'utf8'),ctx);
+ const ctx={URL,encodeURIComponent,self:{registration:{scope},location:{origin:'https://example.test'},addEventListener:(k,f)=>handlers[k]=f,clients:{claim:()=>Promise.resolve()}},caches:{keys:async()=>['autre-app-cache',prefix+'v1',prefix+'v4'],delete:async k=>deleted.push(k)},Promise};vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(root,'sw.js'),'utf8'),ctx);
  handlers.activate({waitUntil:p=>pending=p});await pending;ok(deleted.length===1&&deleted[0]===prefix+'v1','worker préserve caches autres apps');
  let intercepted=false;handlers.fetch({request:{method:'GET',url:'https://example.test/autre-app/confidentiel'},respondWith:()=>intercepted=true});ok(!intercepted,'worker ne cache pas ressources hors application');
  handlers.fetch({request:{method:'POST',url:scope+'app.js'},respondWith:()=>intercepted=true});ok(!intercepted,'worker ignore écritures');
