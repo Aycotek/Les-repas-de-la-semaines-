@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#6b1d2c">
+<title>Les repas de la semaine</title>
+<meta name="description" content="Sept dîners variés par semaine, filtrés selon les ingrédients que tu exclus, avec repères nutrition approximatifs, saison, budget et liste de courses.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="fond-deco" aria-hidden="true"><i></i><i></i><i></i></div>
+<header class="entete">
+  <div class="marque"><span class="logo" aria-hidden="true"></span><h1>Les repas de la semaine</h1></div>
+  <div class="semaine-nav">
+    <button id="semPrec" aria-label="Semaine précédente">‹</button>
+    <span id="semLabel"></span>
+    <button id="semSuiv" aria-label="Semaine suivante">›</button>
+  </div>
+</header>
+<nav class="onglets" role="tablist">
+  <button data-vue="semaine" class="actif" role="tab">Semaine</button>
+  <button data-vue="bilan" role="tab">Bilan</button>
+  <button data-vue="courses" role="tab">Courses</button>
+  <button data-vue="profil" role="tab">Foyer</button>
+</nav>
+<main>
+  <section id="vue-semaine" class="vue actif"></section>
+  <section id="vue-bilan" class="vue"></section>
+  <section id="vue-courses" class="vue"></section>
+  <section id="vue-profil" class="vue"></section>
+</main>
+<footer class="pied">
+  <p style="margin:0 0 12px"><a href="https://github.com/Aycotek/Les-repas-de-la-semaines-" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;min-height:36px;border:1px solid rgba(107,29,44,.35);border-radius:999px;padding:6px 14px;background:rgba(255,255,255,.5);color:#6b1d2c;font-size:.8rem;font-weight:600;text-decoration:none"><svg aria-hidden="true" viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/></svg>Soutenir le projet sur GitHub</a></p>
+  <p>Dessins illustratifs réalisés en vectoriel, pas des photos des plats. Allergènes : liste UE, filtre indicatif. Nutriments : table CIQUAL 2020 (ANSES, Licence Ouverte). Repères : ANSES/PNNS. Prix : estimations indicatives, pas des prix magasin. Voir <a href="SOURCES.md">SOURCES.md</a>.</p>
+</footer>
+<script src="data/references.js"></script>
+<script src="data/ingredients.js"></script>
+<script src="data/recipes-hiver.js"></script>
+<script src="data/recipes-printemps.js"></script>
+<script src="data/recipes-ete.js"></script>
+<script src="data/recipes-automne.js"></script>
+<script src="data/recipes-toute-annee.js"></script>
+<script src="allergenes.js"></script>
+<script src="dessins.js"></script>
+<script src="illustrations.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
