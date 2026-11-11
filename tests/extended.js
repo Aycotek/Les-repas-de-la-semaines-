@@ -58,3 +58,17 @@ const originalWeek=a.cleSemaine();a.setSemaine(new Date(2027,2,10));
 test('ajouts isolés par semaine',()=>{assert.notEqual(a.cleSemaine(),originalWeek);assert.equal(a.coursesManuelles().length,0);assert.equal(a.repasManuels().length,0);});
 for(const r of a.RECETTES){test(`recette ${r.i} données`,()=>{assert.ok(r.ing.length>=3);assert.ok(r.et.length>=2);for(const[k,g]of r.ing){assert.ok(a.ING[k]);assert.ok(g>0&&g<10000);}assert.ok(r.p>=0&&r.c>=0);});}
 console.log(`${n} assertions groupées passées. ${process.exitCode?'Échecs ci-dessus.':'Aucun échec.'}`);
+
+/* Taille du texte (bouton lisibilité en bas de la première page) */
+test('taille texte : défaut 100, cycle 125/150/retour, valeurs invalides ignorées',()=>{
+  delete store.ns_taille_texte; assert.equal(a.tailleTexte(),100);
+  a.cycleTailleTexte(); assert.equal(a.tailleTexte(),125);
+  a.cycleTailleTexte(); assert.equal(a.tailleTexte(),150);
+  a.cycleTailleTexte(); assert.equal(a.tailleTexte(),100);
+  store.ns_taille_texte='999'; assert.equal(a.tailleTexte(),100);
+  store.ns_taille_texte='abc'; assert.equal(a.tailleTexte(),100);
+  store.ns_taille_texte='150'; assert.equal(a.libelleTailleTexte().includes('150'),true);
+  delete store.ns_taille_texte;
+});
+test('bouton lisibilité rendu en bas de la vue semaine',()=>{a.rendreTout();const h=els['#vue-semaine'].innerHTML;assert.ok(h.includes('data-act="tailleTexte"'));assert.ok(h.indexOf('data-act="tailleTexte"')>h.indexOf('Saison favorisée'));assert.ok(h.includes('role="status"'));});
+console.log(`${n} assertions groupées au total. ${process.exitCode?'Échecs ci-dessus.':'Aucun échec.'}`);
