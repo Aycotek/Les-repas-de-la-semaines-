@@ -396,6 +396,7 @@ function rendreSemaine() {
         <ul>${(r.et || []).map(e => `<li>${esc(etapeAffichee(r,e))}</li>`).join("")}</ul>
       </div>
       </div>
+      </div>
     </div>`;
   }).join("");
   $("#vue-semaine").innerHTML = rendreHero() +
