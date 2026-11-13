@@ -350,8 +350,16 @@ const eur = v => v.toFixed(2).replace(".", ",") + " €";
 
 function visuelPlat(r,idx) {
  const src=globalThis.DESSINS_PLATS && globalThis.DESSINS_PLATS[r.i];
- if(src)return `<img src="${esc(src)}" width="1080" height="648" loading="${idx<2?'eager':'lazy'}" decoding="async" alt="Dessin illustratif : ${esc(r.n)}">`;
+ if(src){
+  const photo=src.startsWith("assets/photos/");
+  return `<img src="${esc(src)}" width="1080" height="648" loading="${idx<2?'eager':'lazy'}" decoding="async" alt="${photo?"Photo":"Dessin illustratif"} : ${esc(r.n)}">`;
+ }
  return globalThis.illustrationPlat ? illustrationPlat(r) : "";
+}
+function etiquettePlat(r) {
+ const src=globalThis.DESSINS_PLATS && globalThis.DESSINS_PLATS[r.i];
+ if(src && src.startsWith("assets/photos/"))return "";
+ return `<span class="etiquette">Dessin illustratif</span>`;
 }
 function rendreSemaine() {
   const mois = moisSemaine();
@@ -366,7 +374,7 @@ function rendreSemaine() {
     const al = (globalThis.allergenesDe ? allergenesDe(r.ing) : {c:[],p:[]}), nomAl = id => (globalThis.ALLERGENES.find(a=>a.id===id)||{nom:id}).nom;
     const conflit = estExclue(r, profil.exclusions);
     return `<div class="carte repas ${conflit?"conflit":""}" data-id="${id}" style="--i:${idx}">
-      <div class="visuel">${visuelPlat(r,idx)}<span class="etiquette">Dessin illustratif</span></div>
+      <div class="visuel">${visuelPlat(r,idx)}${etiquettePlat(r)}</div>
       <div class="corps">
       <p class="jour">${dateDiner.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"short"})} · dîner</p><div class="repas-tete"><h2>${esc(r.n)}</h2></div>
       ${conflit ? `<p class="alerte-carte" role="alert">Ne convient plus à tes choix : génère la semaine pour le remplacer.</p>` : ""}
