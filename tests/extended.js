@@ -74,6 +74,11 @@ test('cartes : repliées par défaut, ouverture par le bouton +',()=>{a.rendreTo
   const c=h.indexOf('class="carte repas'), r=h.indexOf('class="repliable masque"');
   const tete=h.slice(c,r);
   assert.ok(!tete.includes('· dîner')&&!tete.includes('badge')&&!tete.includes('Contient'),'rien entre titre et détails');
+  const ouv=(h.match(/<div class="carte repas /g)||[]).length;
+  const cartesHtml=h.match(/<div class="carte repas [^]*?(?=<div class="carte (?:repas|complements)|$)/g);
+  assert.ok(cartesHtml && cartesHtml.length>=7,'7 cartes de repas');
+  const c1=cartesHtml[0];
+  assert.ok(!c1.includes('data-id="e29"'),'cartes non imbriquées');
 });
 console.log(`${n} assertions groupées passées. ${process.exitCode?'Échecs ci-dessus.':'Aucun échec.'}`);
 
@@ -106,5 +111,10 @@ test('cartes : repliées par défaut, ouverture par le bouton +',()=>{a.rendreTo
   const c=h.indexOf('class="carte repas'), r=h.indexOf('class="repliable masque"');
   const tete=h.slice(c,r);
   assert.ok(!tete.includes('· dîner')&&!tete.includes('badge')&&!tete.includes('Contient'),'rien entre titre et détails');
+  const ouv=(h.match(/<div class="carte repas /g)||[]).length;
+  const cartesHtml=h.match(/<div class="carte repas [^]*?(?=<div class="carte (?:repas|complements)|$)/g);
+  assert.ok(cartesHtml && cartesHtml.length>=7,'7 cartes de repas');
+  const c1=cartesHtml[0];
+  assert.ok(!c1.includes('data-id="e29"'),'cartes non imbriquées');
 });
 console.log(`${n} assertions groupées au total. ${process.exitCode?'Échecs ci-dessus.':'Aucun échec.'}`);
