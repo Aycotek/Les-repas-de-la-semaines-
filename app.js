@@ -352,7 +352,9 @@ function visuelPlat(r,idx) {
  const src=globalThis.DESSINS_PLATS && globalThis.DESSINS_PLATS[r.i];
  if(src){
   const photo=src.startsWith("assets/photos/");
-  return `<img src="${esc(src)}" width="1080" height="648" loading="${idx<2?'eager':'lazy'}" decoding="async" alt="${photo?"Photo":"Dessin illustratif"} : ${esc(r.n)}">`;
+  const gen=src.startsWith("assets/gen/");
+  const kind=photo?"Photo":(gen?"Visuel":"Dessin illustratif");
+  return `<img src="${esc(src)}" width="1080" height="648" loading="${idx<2?'eager':'lazy'}" decoding="async" alt="${kind} : ${esc(r.n)}">`;
  }
  return globalThis.illustrationPlat ? illustrationPlat(r) : "";
 }
@@ -376,6 +378,7 @@ function etiquettePlat(r) {
   const c=CREDITS_PHOTOS[r.i];
   return c ? `<span class="etiquette">Photo : <a href="${esc(c.src)}" target="_blank" rel="noopener">${esc(c.nom)}</a> (<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.lic)}</a>)${c.modif?`, ${esc(c.modif)}`:""}</span>` : "";
  }
+ if(src && src.startsWith("assets/gen/")) return "";
  return `<span class="etiquette">Dessin illustratif</span>`;
 }
 function rendreSemaine() {
