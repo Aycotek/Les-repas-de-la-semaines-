@@ -57,6 +57,24 @@ test('lundi et numéro ISO changement année',()=>{assert.equal(a.lundiDe(new Da
 const originalWeek=a.cleSemaine();a.setSemaine(new Date(2027,2,10));
 test('ajouts isolés par semaine',()=>{assert.notEqual(a.cleSemaine(),originalWeek);assert.equal(a.coursesManuelles().length,0);assert.equal(a.repasManuels().length,0);});
 for(const r of a.RECETTES){test(`recette ${r.i} données`,()=>{assert.ok(r.ing.length>=3);assert.ok(r.et.length>=2);for(const[k,g]of r.ing){assert.ok(a.ING[k]);assert.ok(g>0&&g<10000);}assert.ok(r.p>=0&&r.c>=0);});}
+
+/* Cartes repliées : visuel + titre + bouton + visibles, détail masqué par défaut */
+test('cartes : repliées par défaut, ouverture par le bouton +',()=>{a.rendreTout();const h=els['#vue-semaine'].innerHTML;
+  assert.ok(h.includes('class="repliable masque"'));
+  assert.ok(h.includes('btn-plus'));
+  assert.ok(!h.includes('visuel-btn'));
+  assert.ok(h.includes('data-act="detail"'));
+  assert.ok(h.includes('aria-expanded="false"'));
+  assert.ok(h.includes('aria-label="Détails :'));
+  assert.ok(h.includes('>+</button>'));
+  const m=h.match(/aria-controls="(det-[^"]+)"/); assert.ok(m); assert.ok(h.includes(`id="${m[1]}"`));
+  assert.ok(h.indexOf('repliable masque')<h.indexOf('Remplacer ce plat'));
+  assert.ok(h.indexOf('repliable masque')<h.indexOf('Préparation'));
+  assert.ok(h.indexOf('repliable masque')<h.indexOf('· dîner'));
+  const c=h.indexOf('class="carte repas'), r=h.indexOf('class="repliable masque"');
+  const tete=h.slice(c,r);
+  assert.ok(!tete.includes('· dîner')&&!tete.includes('badge')&&!tete.includes('Contient'),'rien entre titre et détails');
+});
 console.log(`${n} assertions groupées passées. ${process.exitCode?'Échecs ci-dessus.':'Aucun échec.'}`);
 
 /* Taille du texte (bouton lisibilité en bas de la première page) */
@@ -71,4 +89,22 @@ test('taille texte : défaut 100, cycle 125/150/retour, valeurs invalides ignor�
   delete store.ns_taille_texte;
 });
 test('bouton lisibilité rendu en bas de la vue semaine',()=>{a.rendreTout();const h=els['#vue-semaine'].innerHTML;assert.ok(h.includes('data-act="tailleTexte"'));assert.ok(h.indexOf('data-act="tailleTexte"')>h.indexOf('Saison favorisée'));assert.ok(h.includes('role="status"'));});
+
+/* Cartes repliées : visuel + titre + bouton + visibles, détail masqué par défaut */
+test('cartes : repliées par défaut, ouverture par le bouton +',()=>{a.rendreTout();const h=els['#vue-semaine'].innerHTML;
+  assert.ok(h.includes('class="repliable masque"'));
+  assert.ok(h.includes('btn-plus'));
+  assert.ok(!h.includes('visuel-btn'));
+  assert.ok(h.includes('data-act="detail"'));
+  assert.ok(h.includes('aria-expanded="false"'));
+  assert.ok(h.includes('aria-label="Détails :'));
+  assert.ok(h.includes('>+</button>'));
+  const m=h.match(/aria-controls="(det-[^"]+)"/); assert.ok(m); assert.ok(h.includes(`id="${m[1]}"`));
+  assert.ok(h.indexOf('repliable masque')<h.indexOf('Remplacer ce plat'));
+  assert.ok(h.indexOf('repliable masque')<h.indexOf('Préparation'));
+  assert.ok(h.indexOf('repliable masque')<h.indexOf('· dîner'));
+  const c=h.indexOf('class="carte repas'), r=h.indexOf('class="repliable masque"');
+  const tete=h.slice(c,r);
+  assert.ok(!tete.includes('· dîner')&&!tete.includes('badge')&&!tete.includes('Contient'),'rien entre titre et détails');
+});
 console.log(`${n} assertions groupées au total. ${process.exitCode?'Échecs ci-dessus.':'Aucun échec.'}`);
