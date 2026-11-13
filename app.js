@@ -145,19 +145,28 @@ function formeCulinaire(r) {
  const n=r.n.toLowerCase();
  if(/soupe|velouté|bouillon|minestrone|dahl|curry|ramen/.test(n))return "bol_mijote";
  if(/salade|taboulé|bowl/.test(n))return "salade";
- if(/gratin|tarte|quiche|pizza|lasagne|hachis|tian/.test(n))return "four";
+ if(/gratin|tarte|quiche|pizza|lasagne|hachis|parmentier|tian/.test(n))return "four";
  if(/pâtes|spaghetti|tagliatelle|risotto|riz|nouilles|crozets/.test(n))return "cereales";
  return "poele_roti";
+}
+// Famille de plat : nom distinctif du plat principal (partie avant la virgule d'accompagnement).
+// Sert à éviter deux plats quasi identiques dans la semaine (ex. deux parmentiers).
+const FAMILLES_PLAT = [/parmentier|hachis/,/moussaka/,/lasagne/,/tartiflette/,/cassoulet|cassolette/,/blanquette/,/bourg/,/pot-au-feu/,/chili/,/couscous/,/tajine/,/paella|paëlla/,/risotto/,/curry/,/dahl|dal\b/,/wok/,/gratin(?!é)/,/quiche/,/pizza/,/galette/,/croque/,/tarte/,/tian/,/fondue/,/raclette/,/burger/];
+function famillePlat(r) {
+  const n = r.n.toLowerCase().split(",")[0];
+  for (const re of FAMILLES_PLAT) if (re.test(n)) return re.source;
+  return null;
 }
 function scorePlan(ids,mois=moisSemaine()) {
   const recettes = ids.map(i => RECETTE_PAR_ID[i]);
   let s = 0;
-  const types = {}, formes = {};
+  const types = {}, formes = {}, familles = {};
   let poisson = 0, gras = 0, legum = 0, viandeG = 0, charcG = 0, budget = 0;
   const tot = {}; for (const [cle] of NUTRIMENTS) tot[cle] = 0;
   for (const r of recettes) {
     types[r.t] = (types[r.t] || 0) + 1;
     const forme=formeCulinaire(r);formes[forme]=(formes[forme]||0)+1;
+    const fam=famillePlat(r);if(fam)familles[fam]=(familles[fam]||0)+1;
     if (r.t === "poisson_maigre" || r.t === "poisson_gras") poisson++;
     if (r.t === "poisson_gras") gras++;
     if (contientLegumineuses(r)) legum++;
@@ -177,6 +186,8 @@ function scorePlan(ids,mois=moisSemaine()) {
   s -= Math.max(0, budget + coutComplements() - profil.budget) * 10;
   for (const t of Object.values(types)) if (t > 2) s -= 12 * (t - 2);
   for(const [f,n] of Object.entries(formes)) s-= (f==="bol_mijote"?35:15)*Math.max(0,n-2);
+  // Deux plats de la même famille dans la semaine : pénalité forte mais souple (jamais bloquante).
+  for(const n of Object.values(familles)) if(n>1) s-=60*(n-1);
   for(let i=1;i<recettes.length;i++)if(formeCulinaire(recettes[i])===formeCulinaire(recettes[i-1]))s-=5;
   // Saisonnalité (contrainte souple) : bonus pour les recettes propres au mois courant
   for (const r of recettes) if ((r.m || []).includes(mois) && (r.m || []).length < 12) s += 4;
@@ -660,7 +671,7 @@ function rendreTout() {
  if(!stockageDisponible) $("#vue-semaine").innerHTML = '<p role="alert" class="alternatives">Stockage local indisponible : tes changements peuvent être perdus à la fermeture.</p>'+$("#vue-semaine").innerHTML;
 }
 appliquerTailleTexte();
-if(typeof module!=="undefined" && module.exports) module.exports={etapeAffichee,formeCulinaire,complements,coutComplements,contientLegumineuses,RECETTES,ING,scorePlan,genererPlan,relancerRepas,listeCourses,nutrimentsRecette,bilanPlan,rnpHebdoFoyer,estExclue,poolDuMois,lundiDe,isoSemaine,cleSemaine,idsComplets,coursesManuelles,repasManuels,chargerPlan,chargerProfil,rendreTout,activerVue,tailleTexte,cycleTailleTexte,libelleTailleTexte,getProfil:()=>profil,setProfil:p=>{profil=p;},getPlan:()=>plan,setPlan:p=>{plan=p;},setSemaine:d=>{semaine=lundiDe(d);}};
+if(typeof module!=="undefined" && module.exports) module.exports={etapeAffichee,formeCulinaire,famillePlat,complements,coutComplements,contientLegumineuses,RECETTES,ING,scorePlan,genererPlan,relancerRepas,listeCourses,nutrimentsRecette,bilanPlan,rnpHebdoFoyer,estExclue,poolDuMois,lundiDe,isoSemaine,cleSemaine,idsComplets,coursesManuelles,repasManuels,chargerPlan,chargerProfil,rendreTout,activerVue,tailleTexte,cycleTailleTexte,libelleTailleTexte,getProfil:()=>profil,setProfil:p=>{profil=p;},getPlan:()=>plan,setPlan:p=>{plan=p;},setSemaine:d=>{semaine=lundiDe(d);}};
 rendreTout();
 if (typeof navigator!=="undefined" && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 })();
