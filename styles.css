@@ -78,12 +78,14 @@ button{font:inherit;min-height:44px;cursor:pointer}
 
 /* Cartes de repas */
 .liste-repas{display:grid;gap:12px}
-.repas{padding:0;overflow:hidden;display:grid;grid-template-columns:1fr}
+.repas{padding:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr)}
 .repas .visuel{position:relative;aspect-ratio:360/216;max-height:230px;overflow:hidden;background:var(--beige-2)}
 .repas .visuel :is(svg,img){display:block;width:100%;height:100%;object-fit:cover}
 .etiquette{position:absolute;left:10px;bottom:8px;font-size:.66rem;background:rgba(255,250,243,.8);color:var(--doux);border-radius:999px;padding:2px 9px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .repas .corps{padding:14px 16px 6px}
-.repas .detail{margin:0 16px 14px}
+.repas .detail{margin:10px 0 8px}
+.btn-plus{flex:none;width:44px;height:44px;min-height:44px;border-radius:50%;border:1px solid var(--doux);background:var(--beige-2);color:var(--texte);font-size:1.4rem;line-height:1;display:flex;align-items:center;justify-content:center;padding:0}
+button.btn-plus[aria-expanded="true"],button.btn-plus[aria-expanded="true"]:hover{background:var(--doux);color:#fff}
 .repas.conflit{outline:2px solid #d98b84}
 .anime .repas{animation:monte .6s var(--ease) both;animation-delay:calc(var(--i)*70ms)}
 .anime .repas .visuel :is(svg,img){animation:assiette .8s var(--ease) both;animation-delay:calc(var(--i)*70ms)}
@@ -93,7 +95,7 @@ button{font:inherit;min-height:44px;cursor:pointer}
 .vapeur path:nth-child(2){animation-delay:.6s}.vapeur path:nth-child(3){animation-delay:1.2s}
 @keyframes vapeur{0%{opacity:0;stroke-dashoffset:60}40%{opacity:.8}100%{opacity:0;stroke-dashoffset:-30}}
 .repas-tete{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.repas-tete h2{font-size:1.15rem;line-height:1.25}
+.repas-tete h2{flex:1;min-width:0;font-size:1.15rem;line-height:1.25}
 .jour{color:var(--bordeaux-2);font-size:.72rem;font-weight:700;letter-spacing:.07em;margin-bottom:3px;text-transform:uppercase}
 .puces-info{margin-top:8px;display:flex;flex-wrap:wrap;gap:4px}
 .badge{display:inline-block;font-size:.72rem;padding:3px 10px;border-radius:999px;background:rgba(107,29,44,.09);color:var(--bordeaux);font-weight:600}

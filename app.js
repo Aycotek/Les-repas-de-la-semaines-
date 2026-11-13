@@ -376,24 +376,25 @@ function rendreSemaine() {
     return `<div class="carte repas ${conflit?"conflit":""}" data-id="${id}" style="--i:${idx}">
       <div class="visuel">${visuelPlat(r,idx)}${etiquettePlat(r)}</div>
       <div class="corps">
-      <p class="jour">${dateDiner.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"short"})} · dîner</p><div class="repas-tete"><h2>${esc(r.n)}</h2></div>
+      <div class="repas-tete"><h2>${esc(r.n)}</h2><button class="btn-plus" type="button" data-act="detail" data-nom="${esc(r.n)}" aria-expanded="false" aria-controls="det-${id}" aria-label="Détails : ${esc(r.n)}">+</button></div>
       ${conflit ? `<p class="alerte-carte" role="alert">Ne convient plus à tes choix : génère la semaine pour le remplacer.</p>` : ""}
+      <div class="repliable masque" id="det-${id}">
+      <p class="jour">${dateDiner.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"short"})} · dîner</p>
       <div class="puces-info"><span class="badge">${TYPE_LABEL[r.t] || r.t}</span>
       <span class="badge ${long?"long":""}">${tps} min</span><span class="badge">~${Math.round(nutrimentsRecette(r).t.kcal/4)} kcal/portion</span><span class="badge">~${eur(coutRecette(r)*profil.portionsParRecette/4)}</span></div>
       ${al.c.length ? `<p class="meta allerg">Contient : ${al.c.map(nomAl).join(", ")}</p>` : ""}
       <div class="meta">Prépa ${r.p} min · cuisson ${r.c} min · ${profil.portionsParRecette} portions au total · restes : déjeuner du ${dateRestes.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"short"})}</div>
       ${manque.length ? `<div class="alternatives">Matériel manquant : ${manque.map(m => m + " → alternative : " + (ALT_MATERIEL[m] || "adapter")).join(" ; ")}</div>` : ""}
       <div class="actions">
-        <button class="petit" data-act="detail" aria-expanded="false">Détails</button>
         <button class="petit" data-act="relancer" data-idx="${idx}">Remplacer ce plat</button>
       </div>
-      </div>
-      <div class="detail masque">
+      <div class="detail">
         ${(al.c.length||al.p.length) ? `<p class="note"><strong>Allergènes (liste UE) :</strong> ${al.c.length?"contient "+al.c.map(nomAl).join(", "):"aucun certain"}${al.p.length?" · possible selon les marques (produits transformés, à vérifier sur l'étiquette) : "+al.p.map(nomAl).join(", "):""}. Traces et contamination croisée non couvertes.</p>` : `<p class="note">Aucun allergène UE identifié dans les ingrédients du catalogue (traces et produits industriels non vérifiables).</p>`}
         <h3>Ingrédients (${profil.portionsParRecette} portions)</h3>
         <ul>${r.ing.map(([k, g]) => { const ing = ING[k]; return ing ? `<li>${ing.nom} — ${esc(quantiteIngredient(k,g * profil.portionsParRecette / 4))}${ACHATS[k]?`<small class="note note-achat">${esc(noteAchat(k))}</small>`:""}</li>` : ""; }).join("")}</ul>
         <p class="note">~${eur(coutRecette(r)*profil.portionsParRecette/4)} pour la recette · ~${Math.round(nutrimentsRecette(r).t.kcal/4)} kcal/portion (estimation, données partielles possibles)</p><p class="note">Correspondances CIQUAL approximatives ou absentes (non chiffrées si absentes) : ${r.ing.filter(([k])=>ING[k].correspondance!=="directe").map(([k])=>esc(ING[k].nom)).join(", ")||"aucune signalée"}. Les calculs utilisent les poids comestibles. Quand un rendement est indiqué, le poids à acheter avec os ou coquilles est affiché séparément. Rendements estimés et pertes de cuisson non modélisées ; certains produits entiers du catalogue restent approximatifs.</p><h3>Préparation</h3>
         <ul>${(r.et || []).map(e => `<li>${esc(etapeAffichee(r,e))}</li>`).join("")}</ul>
+      </div>
       </div>
     </div>`;
   }).join("");
@@ -592,7 +593,7 @@ document.addEventListener("click", e => {
   if (b.dataset.act === "annuler") { const p = planPrecedent(); if (p) { const cur = plan; plan = p; stockage.setItem("ns_plan_" + cleSemaine(), JSON.stringify(plan)); stockage.setItem("ns_plan_prev_" + cleSemaine(), JSON.stringify(cur)); resetCoches(); messageGen = "Menu précédent rétabli (tu peux ré-annuler pour revenir)."; animer = true; rendreTout(); } }
   if (b.dataset.act === "ouvrirFiltres") { panelOuvert = !panelOuvert; rendreTout(); }
   if (b.dataset.act === "retireMot") { profil.exclusions = profil.exclusions.filter(x => x !== b.dataset.mot); sauverProfil(profil); panelOuvert = true; messageGen = ""; rendreTout(); }
-  if (b.dataset.act === "detail") { const d = b.closest(".carte").querySelector(".detail"); d.classList.toggle("masque"); b.setAttribute("aria-expanded", String(!d.classList.contains("masque"))); b.textContent = d.classList.contains("masque") ? "Détails" : "Masquer"; }
+  if (b.dataset.act === "detail") { const d = b.closest(".carte").querySelector(".repliable"); d.classList.toggle("masque"); const ouvert = !d.classList.contains("masque"); b.setAttribute("aria-expanded", String(ouvert)); b.setAttribute("aria-label", (ouvert ? "Masquer : " : "Détails : ") + (b.dataset.nom || "")); b.textContent = ouvert ? "−" : "+"; }
   if (b.dataset.act === "relancer") {
     resetCoches(); memoriserPlan();
     plan = relancerRepas(plan, +b.dataset.idx, moisSemaine(), hashStr(cleSemaine() + ":" + Date.now()));
