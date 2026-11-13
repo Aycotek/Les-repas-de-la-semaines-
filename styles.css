@@ -84,6 +84,7 @@ button{font:inherit;min-height:44px;cursor:pointer}
 .etiquette{position:absolute;left:10px;bottom:8px;font-size:.66rem;background:rgba(255,250,243,.8);color:var(--doux);border-radius:999px;padding:2px 9px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .repas .corps{padding:14px 16px 6px}
 .repas .detail{margin:10px 0 8px}
+.etiquette a{color:inherit}
 .btn-plus{flex:none;width:44px;height:44px;min-height:44px;border-radius:50%;border:1px solid var(--doux);background:var(--beige-2);color:var(--texte);font-size:1.4rem;line-height:1;display:flex;align-items:center;justify-content:center;padding:0}
 button.btn-plus[aria-expanded="true"],button.btn-plus[aria-expanded="true"]:hover{background:var(--doux);color:#fff}
 .repas.conflit{outline:2px solid #d98b84}

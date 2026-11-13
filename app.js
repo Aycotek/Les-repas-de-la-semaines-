@@ -356,9 +356,26 @@ function visuelPlat(r,idx) {
  }
  return globalThis.illustrationPlat ? illustrationPlat(r) : "";
 }
+/* Crédits photos : nom, licence, URL source et URL licence (à revérifier à la source avant publication) ; modif:"recadrée" si adaptation consignée. */
+const CREDITS_PHOTOS={
+"e08":{nom:"ultrakml",lic:"CC BY 2.0",src:"https://www.flickr.com/photos/34948727@N00/14049540523",url:"https://creativecommons.org/licenses/by/2.0/deed.fr"},
+"e24":{nom:"Shameel mukkath",lic:"Licence Pexels",src:"https://www.pexels.com/photo/vegetable-salad-with-chicken-strips-5639372/",url:"https://www.pexels.com/fr-fr/license/"},
+"e38":{nom:"Nano Erdozain",lic:"Licence Pexels",src:"https://www.pexels.com/photo/29535640/",url:"https://www.pexels.com/fr-fr/license/"},
+"t10":{nom:"Nic Wood",lic:"Licence Pexels",src:"https://www.pexels.com/photo/28286241/",url:"https://www.pexels.com/fr-fr/license/"},
+"t51":{nom:"MikeGz",lic:"Licence Pexels",src:"https://www.pexels.com/photo/overhead-shot-of-a-slice-of-spanish-omelet-4765652/",url:"https://www.pexels.com/fr-fr/license/"},
+"e42":{nom:"Romainbehar",lic:"CC0",src:"https://commons.wikimedia.org/?curid=110017699",url:"https://creativecommons.org/publicdomain/zero/1.0/deed.fr"},
+"h05":{nom:"cyclonebill",lic:"CC BY-SA 2.0",src:"https://www.flickr.com/photos/23178876@N03/5034005470",url:"https://creativecommons.org/licenses/by-sa/2.0/deed.fr"},
+"p27":{nom:"Katrin Gilger",lic:"CC BY-SA 2.0",src:"https://commons.wikimedia.org/?curid=89958449",url:"https://creativecommons.org/licenses/by-sa/2.0/deed.fr"},
+"t45":{nom:"NickNguyen",lic:"CC BY-SA 2.0",src:"https://www.flickr.com/photos/24606258@N05/3747727389",url:"https://creativecommons.org/licenses/by-sa/2.0/deed.fr"},
+"a53":{nom:"Ka23 13",lic:"CC BY-SA 4.0",src:"https://commons.wikimedia.org/?curid=106541820",url:"https://creativecommons.org/licenses/by-sa/4.0/deed.fr"},
+"a59":{nom:"Arnaud 25",lic:"CC BY-SA 4.0",src:"https://commons.wikimedia.org/?curid=95670402",url:"https://creativecommons.org/licenses/by-sa/4.0/deed.fr"},
+"t28":{nom:"Helen Brudna",lic:"Licence Pexels",src:"https://www.pexels.com/photo/32649105/",url:"https://www.pexels.com/fr-fr/license/"}};
 function etiquettePlat(r) {
  const src=globalThis.DESSINS_PLATS && globalThis.DESSINS_PLATS[r.i];
- if(src && src.startsWith("assets/photos/"))return "";
+ if(src && src.startsWith("assets/photos/")){
+  const c=CREDITS_PHOTOS[r.i];
+  return c ? `<span class="etiquette">Photo : <a href="${esc(c.src)}" target="_blank" rel="noopener">${esc(c.nom)}</a> (<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.lic)}</a>)${c.modif?`, ${esc(c.modif)}`:""}</span>` : "";
+ }
  return `<span class="etiquette">Dessin illustratif</span>`;
 }
 function rendreSemaine() {
