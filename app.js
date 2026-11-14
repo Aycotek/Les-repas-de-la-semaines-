@@ -157,6 +157,58 @@ function famillePlat(r) {
   for (const re of FAMILLES_PLAT) if (re.test(n)) return re.source;
   return null;
 }
+// La viande ne définit pas la famille gustative : hachis et parmentiers restent ensemble.
+function familleVoisine(r) {
+ const existante=famillePlat(r);if(existante)return existante;
+ const n=r.n.toLowerCase().split(",")[0];
+ // Ces groupes supplémentaires concernent seulement deux dîners voisins,
+ // sans ajouter d'interdiction ni de pénalité à l'échelle de toute la semaine.
+ for(const re of [/soupe|velouté|bouillon|minestrone|ramen|phở/,/salade|taboulé|bowl/,/omelette|frittata/,/brochette/,/pané/])if(re.test(n))return re.source;
+ return null;
+}
+function platsProches(a,b) {
+ const f=familleVoisine(a);return !!f && f===familleVoisine(b);
+}
+function conflitsVariete(ids) {
+ const conflits=[];
+ for(let i=1;i<ids.length;i++)if(platsProches(RECETTE_PAR_ID[ids[i-1]],RECETTE_PAR_ID[ids[i]]))conflits.push(i);
+ return conflits;
+}
+function ordreSansConflitPossible(ids) {
+ const comptes={};
+ for(const id of ids){const f=familleVoisine(RECETTE_PAR_ID[id]);if(f)comptes[f]=(comptes[f]||0)+1;}
+ return Object.values(comptes).every(n=>n<=Math.ceil(ids.length/2));
+}
+// Au plus 7! ordres. Même sélection : coût, quantités et nutriments strictement identiques.
+// Priorité : zéro famille consécutive, puis varier les formes, puis déplacer peu de jours.
+function repartirPlats(ids) {
+ if(ids.length<2)return ids.slice();
+ const recettes=ids.map(id=>RECETTE_PAR_ID[id]);
+ const familles=recettes.map(familleVoisine),formes=recettes.map(formeCulinaire);
+ const possible=ordreSansConflitPossible(ids);
+ let meilleur=null,cleMeilleure=[Infinity,Infinity,Infinity];
+ const chemin=[],pris=new Set();
+ function visiter(conflits,formesRepetees,deplacements){
+  if(conflits>cleMeilleure[0] || (conflits===cleMeilleure[0] && formesRepetees>cleMeilleure[1]))return;
+  if(chemin.length===ids.length){
+   const cle=[conflits,formesRepetees,deplacements];
+   if(cle[0]<cleMeilleure[0] || (cle[0]===cleMeilleure[0] && (cle[1]<cleMeilleure[1] || (cle[1]===cleMeilleure[1] && cle[2]<cleMeilleure[2])))){meilleur=chemin.map(i=>ids[i]);cleMeilleure=cle;}
+   return;
+  }
+  for(let i=0;i<ids.length;i++)if(!pris.has(i)){
+   const precedent=chemin[chemin.length-1];
+   const conflit=precedent!==undefined && familles[i] && familles[i]===familles[precedent]?1:0;
+   if(possible && conflit)continue;
+   const rep=precedent!==undefined && formes[i]===formes[precedent]?1:0;
+   pris.add(i);chemin.push(i);visiter(conflits+conflit,formesRepetees+rep,deplacements+Math.abs(i-chemin.length+1));chemin.pop();pris.delete(i);
+  }
+ }
+ visiter(0,0,0);return meilleur||ids.slice();
+}
+function remplacementVarie(ids,index,id) {
+ const r=RECETTE_PAR_ID[id];
+ return !(index>0 && platsProches(RECETTE_PAR_ID[ids[index-1]],r)) && !(index+1<ids.length && platsProches(r,RECETTE_PAR_ID[ids[index+1]]));
+}
 function scorePlan(ids,mois=moisSemaine()) {
   const recettes = ids.map(i => RECETTE_PAR_ID[i]);
   let s = 0;
@@ -220,26 +272,29 @@ function rnpHebdoFoyer() {
 }
 function genererPlan(mois, graine) {
   const pool = poolDuMois(mois, profil.exclusions);
-  if (pool.length < 7) return pool.map(r => r.i);
+  if (pool.length < 7) return repartirPlats(pool.map(r => r.i));
   const rand = mulberry32(graine);
-  let meilleur = null, meilleurScore = -1e9;
+  let meilleur = null, meilleurScore = -1e9, meilleurRepli=null, scoreRepli=-1e9;
   for (let it = 0; it < 500; it++) {
     const copie = pool.slice();
     const ids = [];
     while (ids.length < 7 && copie.length) ids.push(copie.splice(Math.floor(rand() * copie.length), 1)[0].i);
     const sc = scorePlan(ids,mois);
-    if (sc > meilleurScore) { meilleurScore = sc; meilleur = ids; }
+    if(sc>scoreRepli){scoreRepli=sc;meilleurRepli=ids;}
+    if (ordreSansConflitPossible(ids) && sc > meilleurScore) { meilleurScore = sc; meilleur = ids; }
   }
-  return meilleur;
+  return repartirPlats(meilleur||meilleurRepli);
 }
 function relancerRepas(planIds, index, mois, graine) {
   // Remplace UN repas en recalculant l'équilibre et le budget de toute la semaine
-  const pool = poolDuMois(mois, profil.exclusions).filter(r => !planIds.includes(r.i));
+  const pool = poolDuMois(mois, profil.exclusions).filter(r => !planIds.includes(r.i) && remplacementVarie(planIds,index,r.i));
   if (!pool.length) return planIds;
   const rand = mulberry32(graine);
   let meilleur = null, meilleurScore = -1e9;
-  for (let it = 0; it < 200; it++) {
-    const cand = pool[Math.floor(rand() * pool.length)].i;
+  // Examiner chaque alternative admissible, sans rater un choix à cause du tirage.
+  const alternatives=pool.slice();
+  while(alternatives.length) {
+    const cand = alternatives.splice(Math.floor(rand()*alternatives.length),1)[0].i;
     const essai = planIds.slice(); essai[index] = cand;
     const sc = scorePlan(essai,mois);
     if (sc > meilleurScore) { meilleurScore = sc; meilleur = cand; }
@@ -430,7 +485,10 @@ function rendreSemaine() {
       </div>
     </div>`;
   }).join("");
-  $("#vue-semaine").innerHTML = rendreHero() +
+  const conflitsOrdre=conflitsVariete(plan);
+  const avertissementVariete=conflitsOrdre.length?`<div class="carte" role="status"><h2>Varier les jours</h2><p>Deux plats de même famille se suivent dans cette semaine enregistrée. ${ordreSansConflitPossible(plan)?"Tu peux réorganiser les mêmes repas, sans changer les courses ni le bilan.":"Avec cette sélection, il est impossible de tous les espacer. Remplace un plat ou élargis tes choix ; aucun repas n'a été changé automatiquement."}</p><button class="petit" type="button" data-act="repartir">Réorganiser les mêmes repas</button></div>`:"";
+  const noteVariete=`<p class="note">Variété des dîners : les plats d'une même famille (hachis et parmentiers, currys, soupes…) sont espacés d'un jour quand les choix le permettent. Deux plats de même famille peuvent revenir plus tard dans la semaine. Les déjeuners de restes restent prévus le lendemain.</p>`;
+  $("#vue-semaine").innerHTML = rendreHero() + avertissementVariete + noteVariete +
     `<div class="bandeau-budget"><span>Budget estimé des menus sélectionnés<br><small class="note">hypothèses indicatives, quantités utilisées, pas un panier magasin</small></span>
      <span class="montant ${budget > profil.budget ? "ko" : "ok"}">${eur(budget)}</span></div>` + `<div class="liste-repas${classeAnim}">` + cartes + `</div>` +
     `<div class="carte complements"><h2>Compléter les repas, pas seulement le plat</h2><p class="note">Proposition facultative : par portion, 150 g de fruit de saison, 125 g de yaourt nature et 10 g d'amandes. Sur 7 recettes de ${profil.portionsParRecette} portions, les restes sont déjà inclus. Ce ne sont pas des portions supplémentaires de plat. Exclus : produits laitiers ou fruits à coque si cochés dans le panneau Allergies et exclusions.</p><button class="petit" id="toggleComplements">${complementsActifs()?"Retirer les compléments":"Ajouter ces compléments à la semaine"}</button>${complementsActifs()?`<p class="note">Inclus dans les courses, le coût et le bilan : ${[...new Set(complements().map(([k])=>ING[k].nom))].join(", ")}. Coût indicatif : ${eur(coutComplements())}. Le bilan reste partiel, surtout pour la vitamine D.</p>`:`<p class=note>Aucun ajout dans les courses ou le bilan tant que tu n’as pas choisi de les inclure. Coût supplémentaire indicatif : ${eur(coutComplements(true))}. ${budget+coutComplements(true)>profil.budget?"Attention : le total dépasserait le budget cible, même avec les prix indicatifs.":""}</p>`}</div><div class="carte ajout-plat"><h2>Ajouter un plat au menu</h2><p class="note">À chaque ajout, tu choisis : <strong>remplacer</strong> l'un des 7 dîners prévus (le nouveau plat prend sa place, la semaine reste à 7) ou <strong>ajouter un 8e repas</strong>, pour les fois où tu reçois du monde. Courses, coût et bilan suivent ce choix.</p><form id="formRepas" class="ajout"><label for="filtreRepas" class="sr-only">Chercher un plat</label><input id="filtreRepas" type="search" maxlength="40" placeholder="Chercher un plat (ex. curry, saumon)…" autocomplete="off"><label for="ajoutRepas" class="sr-only">Plat à ajouter</label><select id="ajoutRepas">${optionsRepas("")}</select><fieldset class="choix-ajout"><legend>Remplacer ou ajouter ?</legend><label class="choix"><input type="radio" name="modeAjout" value="remplacer" checked> Remplacer un dîner prévu</label><label class="choix-cible" for="cibleRemplacement"><span class="sr-only">Dîner à remplacer</span><select id="cibleRemplacement">${optionsRemplacement()}</select></label><label class="choix"><input type="radio" name="modeAjout" value="huitieme"> Ajouter un 8e repas (exception, quand tu reçois)</label></fieldset><button>Ajouter ce plat</button></form>${repasManuels().length ? `<div class="repas-plus"><h3>Repas en plus cette semaine</h3><p class="note">Chaque repas en plus est une recette entière de ${profil.portionsParRecette} portions : il s'ajoute aux 7 dîners dans les courses, le coût et le bilan.</p>${repasManuels().map((id,i)=>`<p class="ligne-repas-plus">${esc(RECETTE_PAR_ID[id].n)} <button class="petit" data-act="supprRepas" data-idx="${i}">Retirer le repas</button></p>`).join("")}</div>` : ""}</div><p class="note">Saison favorisée pour ${REF.mois[mois - 1]} (France métropolitaine), sans exclusion stricte des autres saisons. Hypothèses de l'app : prix indicatifs (pas des prix magasin), composition selon correspondances CIQUAL (états cru/cuit variables), pertes de cuisson non modélisées, 2 personnes par défaut.</p>` +
@@ -622,15 +680,22 @@ document.addEventListener("submit", e => {
 document.addEventListener("click", e => {
   const b = e.target.closest("button[data-act]"); if (!b) return;
   if (b.dataset.act === "generer") generer();
+  if (b.dataset.act === "repartir") {
+   const nouveau=repartirPlats(plan);memoriserPlan();plan=nouveau;
+   stockage.setItem("ns_plan_"+cleSemaine(),JSON.stringify(plan));
+   messageGen=conflitsVariete(plan).length?"Ordre amélioré, mais certains plats restent proches : remplace un plat ou élargis tes choix.":"Mêmes repas réorganisés : courses, quantités et bilan inchangés. Les dates des dîners et des restes suivent ce nouvel ordre.";
+   animer=true;rendreTout();
+  }
   if (b.dataset.act === "annuler") { const p = planPrecedent(); if (p) { const cur = plan; plan = p; stockage.setItem("ns_plan_" + cleSemaine(), JSON.stringify(plan)); stockage.setItem("ns_plan_prev_" + cleSemaine(), JSON.stringify(cur)); resetCoches(); messageGen = "Menu précédent rétabli (tu peux ré-annuler pour revenir)."; animer = true; rendreTout(); } }
   if (b.dataset.act === "ouvrirFiltres") { panelOuvert = !panelOuvert; rendreTout(); }
   if (b.dataset.act === "retireMot") { profil.exclusions = profil.exclusions.filter(x => x !== b.dataset.mot); sauverProfil(profil); panelOuvert = true; messageGen = ""; rendreTout(); }
   if (b.dataset.act === "detail") { const d = b.closest(".carte").querySelector(".repliable"); d.classList.toggle("masque"); const ouvert = !d.classList.contains("masque"); b.setAttribute("aria-expanded", String(ouvert)); b.setAttribute("aria-label", (ouvert ? "Masquer : " : "Détails : ") + (b.dataset.nom || "")); b.textContent = ouvert ? "−" : "+"; }
   if (b.dataset.act === "relancer") {
     resetCoches(); memoriserPlan();
+    const avant=plan.join();
     plan = relancerRepas(plan, +b.dataset.idx, moisSemaine(), hashStr(cleSemaine() + ":" + Date.now()));
     stockage.setItem("ns_plan_" + cleSemaine(), JSON.stringify(plan));
-    messageGen = ""; rendreTout();
+    messageGen = plan.join()===avant?"Aucun autre plat compatible ne peut être placé ici sans ressembler au dîner voisin. Réorganise les repas ou élargis tes choix.":""; rendreTout();
   }
   if (b.dataset.act === "supprRepas") { resetCoches(); const l=repasManuels(); l.splice(+b.dataset.idx,1); stockage.setItem("ns_repas_"+cleSemaine(),JSON.stringify(l)); rendreTout(); }
   if (b.dataset.act === "tailleTexte") { cycleTailleTexte(); focusApres = '[data-act="tailleTexte"]'; rendreTout(); }
@@ -659,6 +724,7 @@ function rendreTout() {
   if(!Number.isInteger(idx)||idx<0||idx>=plan.length)return;
   if(plan[idx]===id){messageGen=`« ${nom} » est déjà le dîner prévu ce jour-là.`;rendreTout();return;}
   if(plan.includes(id)){messageGen=`« ${nom} » est déjà prévu un autre jour cette semaine. Pour le servir deux fois, ajoute-le en 8e repas.`;rendreTout();return;}
+  if(!remplacementVarie(plan,idx,id)){messageGen="Ce plat ressemble trop au dîner de la veille ou du lendemain (par exemple deux hachis ou parmentiers). Choisis un autre jour ou un autre plat.";rendreTout();return;}
   resetCoches();memoriserPlan();
   const ancien=RECETTE_PAR_ID[plan[idx]].n;
   plan=plan.slice();plan[idx]=id;
@@ -671,7 +737,7 @@ function rendreTout() {
  if(!stockageDisponible) $("#vue-semaine").innerHTML = '<p role="alert" class="alternatives">Stockage local indisponible : tes changements peuvent être perdus à la fermeture.</p>'+$("#vue-semaine").innerHTML;
 }
 appliquerTailleTexte();
-if(typeof module!=="undefined" && module.exports) module.exports={etapeAffichee,formeCulinaire,famillePlat,complements,coutComplements,contientLegumineuses,RECETTES,ING,scorePlan,genererPlan,relancerRepas,listeCourses,nutrimentsRecette,bilanPlan,rnpHebdoFoyer,estExclue,poolDuMois,lundiDe,isoSemaine,cleSemaine,idsComplets,coursesManuelles,repasManuels,chargerPlan,chargerProfil,rendreTout,activerVue,tailleTexte,cycleTailleTexte,libelleTailleTexte,getProfil:()=>profil,setProfil:p=>{profil=p;},getPlan:()=>plan,setPlan:p=>{plan=p;},setSemaine:d=>{semaine=lundiDe(d);}};
+if(typeof module!=="undefined" && module.exports) module.exports={familleVoisine,platsProches,conflitsVariete,ordreSansConflitPossible,repartirPlats,remplacementVarie,etapeAffichee,formeCulinaire,famillePlat,complements,coutComplements,contientLegumineuses,RECETTES,ING,scorePlan,genererPlan,relancerRepas,listeCourses,nutrimentsRecette,bilanPlan,rnpHebdoFoyer,estExclue,poolDuMois,lundiDe,isoSemaine,cleSemaine,idsComplets,coursesManuelles,repasManuels,chargerPlan,chargerProfil,rendreTout,activerVue,tailleTexte,cycleTailleTexte,libelleTailleTexte,getProfil:()=>profil,setProfil:p=>{profil=p;},getPlan:()=>plan,setPlan:p=>{plan=p;},setSemaine:d=>{semaine=lundiDe(d);}};
 rendreTout();
 if (typeof navigator!=="undefined" && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 })();
