@@ -42,7 +42,7 @@ const PROFIL_DEFAUT = { personnes: [
 let stockageDisponible = true;
 const stockage = {
  getItem(k) { try { return localStorage.getItem(k); } catch { stockageDisponible = false; return null; } },
- setItem(k,v) { try { localStorage.setItem(k,v); } catch { stockageDisponible = false; } }
+ setItem(k,v) { try { localStorage.setItem(k,v); stockageDisponible = true; return true; } catch { stockageDisponible = false; return false; } }
 };
 const entier = (v,min,max,def) => Number.isFinite(+v) ? Math.max(min,Math.min(max,Math.round(+v))) : def;
 /* Anciens réglages (motifs bruts) -> nouveaux choix. Toujours au moins aussi prudent : un ancien « œufs/lait/fruits à coque/poisson » devient une allergie stricte. */
@@ -61,7 +61,7 @@ function chargerProfil() {
  materiel: Array.isArray(p.materiel) ? p.materiel.filter(x=>typeof x==="string") : [...PROFIL_DEFAUT.materiel],
  budget: entier(p.budget ?? 80,20,300,80), portionsParRecette:entier(p.portionsParRecette ?? 4,2,12,4) };
 }
-function sauverProfil(p) { stockage.setItem("ns_profil", JSON.stringify(p)); }
+function sauverProfil(p) { return stockage.setItem("ns_profil", JSON.stringify(p)); }
 let profil = chargerProfil();
 
 /* ---------- Taille du texte (accessibilité, réglage gardé sur cet appareil) ---------- */
@@ -104,6 +104,10 @@ function quantiteIngredient(k,g) {
 function etapeAffichee(r,e) {
  // Adapter les rappels d'achat dans les étapes, sans changer la recette source.
  const q=profil.portionsParRecette/4;
+ // Les volumes déjà écrits pour quatre suivent les portions, jamais les durées/températures.
+ const eaux={h04:["1,5 l",1.5],h14:["1,5 l",1.5],h21:["1 l",1],h33:["1,2 l",1.2],h59:["1 l",1],a40:["1,2 l",1.2]};
+ if(eaux[r.i]){const [texte,litres]=eaux[r.i];e=e.replace(texte+" d'eau",(litres*q).toLocaleString("fr-FR",{maximumFractionDigits:2})+" l d'eau");}
+ if(r.i==="h11")e=e.replace("4 ramequins",profil.portionsParRecette+" ramequins");
  if(r.i==="h49")e=e.replace("1 kg en rondelles pour 700 g de chair",`${poidsTexte(1000*q)} en rondelles pour ${poidsTexte(700*q)} de chair`);
  if(r.i==="t42")e=e.replace("800 g en coquille, soit 200 g de chair",`${poidsTexte(800*q)} en coquille, soit ${poidsTexte(200*q)} de chair`);
  if(r.ing.some(([k])=>k==="moule")){
@@ -469,7 +473,7 @@ function rendreSemaine() {
       <div class="puces-info"><span class="badge">${TYPE_LABEL[r.t] || r.t}</span>
       <span class="badge ${long?"long":""}">${tps} min</span><span class="badge">~${Math.round(nutrimentsRecette(r).t.kcal/4)} kcal/portion</span><span class="badge">~${eur(coutRecette(r)*profil.portionsParRecette/4)}</span></div>
       ${al.c.length ? `<p class="meta allerg">Contient : ${al.c.map(nomAl).join(", ")}</p>` : ""}
-      <div class="meta">Prépa ${r.p} min · cuisson ${r.c} min · ${profil.portionsParRecette} portions au total · restes : déjeuner du ${dateRestes.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"short"})}</div>
+      <div class="meta">Prépa ${r.p} min · cuisson ${r.c} min · ${profil.portionsParRecette} portions au total · ${profil.portionsParRecette<profil.personnes.length?`Pas assez de portions pour un dîner complet de ${profil.personnes.length} personnes, sans compter les restes`:profil.portionsParRecette<2*profil.personnes.length?`Après un dîner de ${profil.personnes.length} portions, ${Math.max(0,profil.portionsParRecette-profil.personnes.length)} portion(s) restante(s) : pas assez pour le déjeuner de tout le foyer`:`restes : déjeuner du ${dateRestes.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"short"})}`}</div>
       ${manque.length ? `<div class="alternatives">Matériel manquant : ${manque.map(m => m + " → alternative : " + (ALT_MATERIEL[m] || "adapter")).join(" ; ")}</div>` : ""}
       <div class="actions">
         <button class="petit" data-act="relancer" data-idx="${idx}">Remplacer ce plat</button>
@@ -534,7 +538,7 @@ function rendreBilan() {
   $("#vue-bilan").innerHTML = `<div class="carte">
     <h2>Bilan de la semaine (repas planifiés)</h2>
     <div class="limites"><h3>À lire avant d'utiliser ce bilan</h3><ul>
-      <li><strong>Périmètre :</strong> les dîners planifiés et leurs restes pris au déjeuner, soit ${idsComplets().length * profil.portionsParRecette / profil.personnes.length} portions/personne au total, ajouts inclus, pour ${profil.personnes.length} personnes. ${complementsActifs()?"Fruits, yaourts et amandes sélectionnés inclus.":"Fruits et laitages hors plats non inclus sans sélection des compléments."} Hypothèse par défaut : 7 dîners + 7 déjeuners de restes. Petits-déjeuners et autres repas non compris : viser 100 % sur les seuls repas planifiés n'est pas l'objectif, les autres repas complètent.</li>
+      <li><strong>Périmètre :</strong> les dîners planifiés et leurs restes pris au déjeuner, soit ${idsComplets().length * profil.portionsParRecette / profil.personnes.length} portions/personne au total, ajouts inclus, pour ${profil.personnes.length} personnes. ${complementsActifs()?"Fruits, yaourts et amandes sélectionnés inclus.":"Fruits et laitages hors plats non inclus sans sélection des compléments."} ${profil.portionsParRecette<2*profil.personnes.length?"Les portions choisies ne suffisent pas à un dîner et un déjeuner complet pour chaque personne ; les apports ci-dessus suivent seulement les quantités prévues.":"Hypothèse par défaut : 7 dîners + 7 déjeuners de restes."} Petits-déjeuners et autres repas non compris : viser 100 % sur les seuls repas planifiés n'est pas l'objectif, les autres repas complètent.</li>
       <li><strong>Données absentes :</strong> ${manquants} valeur(s) nutriment absente(s) de la table CIQUAL pour ces ingrédients : non comptées, jamais estimées à 0. Un bilan incomplet ne permet pas de conclure à une carence.</li>
       <li><strong>Approximations :</strong> certains ingrédients sont approchés par un aliment voisin (le détail des plats le signale), états cru/cuit variables, pertes de cuisson non modélisées.</li>
       <li><strong>Repères :</strong> références ANSES adultes moyennes (profil type, pas un avis médical). Fer : hypothèse femme à pertes menstruelles élevées (16 mg/j), pas une valeur universelle.</li>
@@ -599,27 +603,32 @@ function rendreProfil() {
       <input type="number" id="nbPers" min="1" max="8" value="${profil.personnes.length}"></div>
     <div class="champ"><label for="nbPortions">Portions cuisinées par recette (dîner + restes)</label>
       <input type="number" id="nbPortions" min="2" max="12" value="${profil.portionsParRecette}"></div>
+    <p class="note">Pour ${profil.personnes.length} personnes, un dîner et un déjeuner de restes demandent ${2*profil.personnes.length} portions par recette. ${profil.portionsParRecette<2*profil.personnes.length?`Avec ${profil.portionsParRecette} portions choisies, les restes ne couvrent pas un déjeuner complet pour tout le foyer. Les quantités ne sont pas augmentées automatiquement.`:"Les portions choisies permettent ces deux repas ; les quantités restent celles du réglage."}</p>
     <div class="champ"><label for="budget">Budget cible des 7 dîners (€)</label>
       <input type="number" id="budget" min="20" max="300" value="${profil.budget}"></div>
     <div class="champ"><label>Matériel de cuisine disponible</label><div class="coches" id="cochesMat">
       ${materiels.map(m => `<label><input type="checkbox" value="${m}" ${profil.materiel.includes(m) ? "checked" : ""}> ${m === "raclette" ? "appareil à raclette" : m.replace("_", " ")}</label>`).join("")}</div></div>
-    <button class="petit principal" id="sauverProfil">Enregistrer et régénérer la semaine</button>
+    <button class="petit" id="sauverProfil">Enregistrer les réglages</button>
+    <p class="note">Tes plats et les coches de courses sont conservés. Pour changer les repas, utilise ensuite « Générer les repas de la semaine » dans Semaine. Si tu modifies les portions, vérifie les nouvelles quantités des articles déjà cochés.</p>
+    <p class="note" id="statutProfil" role="status" aria-live="polite"></p>
   </div>`;
   $("#sauverProfil").addEventListener("click", () => {
-    const n = Math.max(1, Math.min(8, +$("#nbPers").value || 2));
+    const portionsAvant=profil.portionsParRecette;
+    const n = entier($("#nbPers").value || 2,1,8,2);
     const pers = [];
     for (let i = 0; i < n; i++) pers.push({ sexe: i % 2 ? "femme" : "homme", poids: i % 2 ? 60 : 70 });
     profil.personnes = pers;
-    profil.portionsParRecette = Math.max(2, Math.min(12, +$("#nbPortions").value || 4));
+    profil.portionsParRecette = entier($("#nbPortions").value || 4,2,12,4);
     profil.budget = entier($("#budget").value || 80,20,300,80);
     profil.materiel = [...document.querySelectorAll("#cochesMat input:checked")].map(c => c.value);
-    sauverProfil(profil); resetCoches();
-    stockage.setItem("ns_repas_"+cleSemaine(),JSON.stringify(repasManuels().filter(id=>!estExclue(RECETTE_PAR_ID[id],profil.exclusions))));
-    plan = genererPlan(moisSemaine(), hashStr(cleSemaine() + Date.now()));
-    stockage.setItem("ns_plan_" + cleSemaine(), JSON.stringify(plan));
-    messageGen = "Foyer enregistré, semaine régénérée."; animer = true;
+    const enregistre=sauverProfil(profil);
+    // Enregistrer le foyer ne remplace jamais ses repas, ajouts ou coches.
+    // Les portions changent les quantités calculées, pas les plats choisis.
+    const quantitesChangees=portionsAvant!==profil.portionsParRecette;
+    messageGen=(enregistre?"Réglages enregistrés : mêmes repas conservés.":"Réglages appliqués pour cette session, mais non enregistrés : stockage local indisponible. Ils peuvent être perdus au rechargement. Mêmes repas conservés.")+(quantitesChangees?" Quantités recalculées : vérifie les articles déjà cochés dans les courses.":"");
     rendreTout();
-    activerVue("semaine");
+    $("#statutProfil").textContent=messageGen;
+    activerVue("profil");
   });
 }
 
