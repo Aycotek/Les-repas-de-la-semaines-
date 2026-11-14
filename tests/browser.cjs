@@ -11,7 +11,7 @@ try{
  await page.screenshot({path:'/downloads/repas-v3-mobile-semaine.png',fullPage:true});
  await page.locator('[data-act=detail]').first().click();ok(await page.locator('.detail').first().isVisible(),'détail ouvert');ok((await page.locator('.detail').first().innerText()).includes('Préparation'),'étapes');
  const beforeComplements=await page.locator('.montant').innerText();await page.locator('#toggleComplements').click();ok(await page.locator('.montant').innerText()!==beforeComplements,'compléments changent le coût');await page.reload();ok((await page.locator('#toggleComplements').innerText()).includes('Retirer'),'compléments persistants');await page.locator('[data-vue=bilan]').click();ok((await page.locator('#vue-bilan').innerText()).includes('Fruits, yaourts et amandes sélectionnés inclus.'),'compléments au bilan');await page.screenshot({path:'/downloads/repas-v2-complements-bilan.png',fullPage:true});await page.locator('[data-vue=semaine]').click();await page.locator('#toggleComplements').click();ok(await page.locator('.montant').innerText()===beforeComplements,'retrait compléments réversible');
- const firstId=await page.locator('.carte[data-id]').first().getAttribute('data-id');await page.locator('[data-act=relancer]').first().click();ok(await page.locator('.carte[data-id]').first().getAttribute('data-id')!==firstId,'relance change repas');
+ const firstId=await page.locator('.carte[data-id]').first().getAttribute('data-id');await page.locator('[data-act=detail]').first().click();await page.locator('[data-act=relancer]').first().click();ok(await page.locator('.carte[data-id]').first().getAttribute('data-id')!==firstId,'relance change repas');
  const relaunchId=await page.locator('.carte[data-id]').first().getAttribute('data-id');await page.reload();ok(await page.locator('.carte[data-id]').first().getAttribute('data-id')===relaunchId,'plan persiste');
  await page.locator('[data-vue=bilan]').click();ok((await page.locator('#vue-bilan').innerText()).includes('Protéines'),'macro protéines');ok((await page.locator('#vue-bilan').innerText()).includes('Énergie'),'énergie');ok(await page.locator('#vue-bilan tr').count()===28,'27 nutriments');ok((await page.locator('#vue-bilan').innerText()).includes('Partiel'),'lacunes par nutriment');
  await page.screenshot({path:'/downloads/repas-v3-mobile-bilan.png',fullPage:true});
@@ -25,7 +25,7 @@ try{
  ok((await page.locator('#annonce').innerText()).includes('remplace'),'annonce du remplacement');
  await page.reload();ok(await page.locator('.carte[data-id]').nth(2).getAttribute('data-id')===platLibre,'remplacement persistant');
  const planIdsApres=await page.locator('.carte[data-id]').evaluateAll(els=>els.map(e=>e.dataset.id));
- await page.locator('#ajoutRepas').selectOption(planIdsApres[4]);await page.locator('#formRepas button').click();
+ const doublon=await page.locator('#ajoutRepas option').evaluateAll((opts,ids)=>opts.map(o=>o.value).find(v=>ids.slice(1).includes(v)),planIdsApres);await page.locator('#ajoutRepas').selectOption(doublon);await page.locator('#formRepas button').click();
  ok((await page.locator('#annonce').innerText()).includes('déjà prévu'),'doublon refusé au remplacement');
  ok(await page.locator('.carte[data-id]').nth(4).getAttribute('data-id')===planIdsApres[4],'plan inchangé après doublon refusé');
  const plat8=await page.locator('#ajoutRepas option').evaluateAll((opts,ids)=>opts.map(o=>o.value).find(v=>!ids.includes(v)),planIdsApres);
