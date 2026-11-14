@@ -27,7 +27,7 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(
 .semaine-nav button:hover{background:rgba(107,29,44,.1)}.semaine-nav button:active{transform:scale(.92)}
 .semaine-nav span{font-size:.88rem;font-weight:600;color:var(--bordeaux-nuit);padding:0 6px;min-width:120px;text-align:center}
 
-.onglets{display:flex;gap:4px;position:sticky;top:8px;z-index:5;max-width:560px;margin:6px auto 8px;padding:4px;width:calc(100% - 24px);background:var(--creme);border:1px solid var(--bord);border-radius:999px;box-shadow:var(--ombre);backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5)}
+.onglets{display:flex;gap:4px;position:relative;z-index:5;max-width:560px;margin:6px auto 8px;padding:4px;width:calc(100% - 24px);background:var(--creme);border:1px solid var(--bord);border-radius:999px;box-shadow:var(--ombre);backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5)}
 .onglets button{flex:1;padding:9px 4px;background:none;border:0;border-radius:999px;font-size:.84rem;color:var(--doux);cursor:pointer;transition:background .25s var(--ease),color .25s,transform .15s}
 .onglets button:active{transform:scale(.96)}
 .onglets button.actif{background:linear-gradient(135deg,var(--bordeaux-2),var(--bordeaux));color:#fff;font-weight:600;box-shadow:0 4px 12px -4px rgba(107,29,44,.6)}
