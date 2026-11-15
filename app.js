@@ -559,6 +559,72 @@ function rendreBilan() {
     <p class="note">Les occasions sont des portions par personne : 4 portions pour 2 = 1 dîner et 1 déjeuner. Catégorie végétarienne ≠ présence garantie de légumineuses. Un bilan incomplet ne permet pas de conclure à une carence. Aucun complément alimentaire conseillé automatiquement.</p></div>` + carteBilanV5();
 }
 
+const RAYON_ORDRE = ["fruits_legumes", "boucherie", "poissonnerie", "charcuterie", "cremerie", "boulangerie", "feculents", "epicerie"];
+const RAYON_NOMS = { fruits_legumes: "Fruits et légumes", boucherie: "Boucherie / volaille", poissonnerie: "Poissonnerie",
+  charcuterie: "Charcuterie", cremerie: "Crèmerie", boulangerie: "Boulangerie", feculents: "Féculents", epicerie: "Épicerie", manuel: "Ajouts manuels" };
+/* Frontière de données de l'appli : la liste de courses en données structurées (version 1).
+   C'est le format qu'un futur connecteur pourrait consommer. Ce n'est ni une API HTTP ni une
+   intégration à un marchand : aucune donnée ne quitte le navigateur, rien n'est envoyé nulle part. */
+function listeCoursesStructuree(restantSeulement) {
+  const agg = listeCourses();
+  const coches = restantSeulement ? cochesCourses() : [];
+  const articles = [];
+  for (const [k, v] of Object.entries(agg)) {
+    if (coches.includes(k)) continue;
+    const a = ACHATS[k];
+    articles.push({
+      id: k,
+      nom: v.nom,
+      rayon: v.rayon,
+      rayonNom: RAYON_NOMS[v.rayon] || v.rayon,
+      grammesNet: v.g,
+      grammesAchat: a ? v.g / a.rendement : v.g
+    });
+  }
+  const manuels = coursesManuelles();
+  const jj = n => String(n).padStart(2, "0");
+  return {
+    version: 1,
+    semaine: `${semaine.getFullYear()}-${jj(semaine.getMonth() + 1)}-${jj(semaine.getDate())}`,
+    portionsParRecette: profil.portionsParRecette,
+    restantSeulement: !!restantSeulement,
+    articles,
+    ajoutsManuels: manuels,
+    nombreArticles: articles.length + manuels.length
+  };
+}
+function texteListeCourses(restantSeulement) {
+  const s = listeCoursesStructuree(restantSeulement);
+  const parRayon = {};
+  for (const art of s.articles) (parRayon[art.rayon] = parRayon[art.rayon] || []).push(art);
+  const lignes = [`Liste de courses - semaine du ${semaine.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}`, ""];
+  for (const r of RAYON_ORDRE) {
+    if (!parRayon[r]) continue;
+    lignes.push(RAYON_NOMS[r]);
+    for (const art of parRayon[r].sort((x, y) => x.nom.localeCompare(y.nom))) lignes.push(`- ${poidsTexte(art.grammesAchat)} ${art.nom}`);
+    lignes.push("");
+  }
+  if (s.ajoutsManuels.length) { lignes.push(RAYON_NOMS.manuel); for (const m of s.ajoutsManuels) lignes.push("- " + m); lignes.push(""); }
+  if (!s.nombreArticles) lignes.push("(aucun article restant : tout est coché)");
+  return { texte: lignes.join("\n").trim(), articles: s.nombreArticles };
+}
+function copieRepli(txt) {
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = txt; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return !!ok;
+  } catch (e) { return false; }
+}
+function copierTexte(txt, cb) {
+  if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(() => cb(true), () => cb(copieRepli(txt)));
+  } else cb(copieRepli(txt));
+}
+function partageDisponible() { return typeof navigator !== "undefined" && typeof navigator.share === "function"; }
+
 function rendreCourses() {
   const agg = listeCourses();
   const rayons = {};
@@ -568,9 +634,8 @@ function rendreCourses() {
     total += v.prix;
   }
   const coches = cochesCourses();
-  const ordre = ["fruits_legumes", "boucherie", "poissonnerie", "charcuterie", "cremerie", "boulangerie", "feculents", "epicerie"];
-  const noms = { fruits_legumes: "Fruits et légumes", boucherie: "Boucherie / volaille", poissonnerie: "Poissonnerie",
-    charcuterie: "Charcuterie", cremerie: "Crèmerie", boulangerie: "Boulangerie", feculents: "Féculents", epicerie: "Épicerie", manuel: "Ajouts manuels" };
+  const ordre = RAYON_ORDRE;
+  const noms = RAYON_NOMS;
   let html = "";
   for (const r of ordre) {
     if (!rayons[r]) continue;
@@ -583,6 +648,12 @@ function rendreCourses() {
   $("#vue-courses").innerHTML = `<div class="carte">
     <h2>Liste de courses — semaine du ${semaine.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}</h2>
     <p class="note">Quantités pour ${profil.portionsParRecette} portions par recette.</p>
+    <div class="export-courses">
+      <button class="petit" type="button" data-act="copierListe">Copier la liste</button>
+      ${partageDisponible() ? `<button class="petit" type="button" data-act="partagerListe">Partager</button>` : ""}
+      <p class="note statut" id="statutExport" role="status">Seuls les articles non cochés sont exportés, prêts à coller dans une appli de courses ou un message.</p>
+      <textarea id="zoneRepli" class="zone-repli" rows="8" readonly hidden aria-label="Texte de la liste affiché quand la copie automatique est refusée"></textarea>
+    </div>
     <details class="plus"><summary>Hypothèses de la liste</summary><ul><li>Nouvelle liste chaque semaine (les anciennes restent consultables), regroupée par rayon.</li><li>Produits avec os ou coquilles : le poids d’achat estimé est distingué de la chair utilisée au bilan.</li><li>Prix : hypothèses indicatives, pas relevés en magasin ; les conditionnements réels peuvent faire varier le total.</li></ul></details>
     ${html}
     <p class="total-courses">Total estimé des menus et compléments choisis : ${eur(total)}<br><small class="note">Articles manuels non chiffrés et hors bilan nutritionnel.</small></p>
@@ -720,6 +791,35 @@ document.addEventListener("click", e => {
   if (b.dataset.act === "supprManuel") {
     const l = coursesManuelles(); l.splice(+b.dataset.idx, 1); sauverCoursesManuelles(l); rendreCourses();
   }
+  if (b.dataset.act === "copierListe") {
+    const res = texteListeCourses(true);
+    const s = $("#statutExport");
+    const zone = $("#zoneRepli");
+    if (!res.articles) {
+      if (s) s.textContent = "Tout est déjà coché : rien à copier.";
+      if (zone) zone.hidden = true;
+      return;
+    }
+    copierTexte(res.texte, ok => {
+      if (!s) return;
+      if (ok) {
+        if (zone) zone.hidden = true;
+        // Retour visuel immédiat sur le bouton lui-même (feedback < 300 ms, Doherty).
+        if (!b.dataset.label) b.dataset.label = b.textContent;
+        b.textContent = "Copié ✓";
+        b.classList.add("retour-ok");
+        setTimeout(() => { if (b.isConnected) { b.textContent = b.dataset.label; b.classList.remove("retour-ok"); } }, 1600);
+        s.textContent = `Liste copiée : ${res.articles} article${res.articles > 1 ? "s" : ""} à acheter (les articles cochés ne sont pas inclus). Tu peux la coller où tu veux.`;
+      } else {
+        if (zone) { zone.value = res.texte; zone.hidden = false; zone.focus(); zone.select(); }
+        s.textContent = "La copie automatique est refusée par ce navigateur. Le texte de la liste est affiché et sélectionné ci-dessous : copie-le manuellement.";
+      }
+    });
+  }
+  if (b.dataset.act === "partagerListe") {
+    const res = texteListeCourses(true);
+    if (partageDisponible()) navigator.share({ title: "Liste de courses", text: res.texte }).catch(() => {});
+  }
 });
 function rendreTout() {
  rendreSemaine(); rendreBilan(); rendreCourses(); rendreProfil();
@@ -832,7 +932,7 @@ function carteBilanV5() {
     <p class="note">${calculables} plat(s) sur ${recettes.length} avec les huit valeurs de composition disponibles. Aucune somme partielle ne remplace une valeur non calculable. Les états cru/cuit et les correspondances entre ingrédients et aliments de référence restent des sources d'incertitude. Aucun seuil médical ni classement santé n'est appliqué ici.</p>${details}</div>`;
 }
 
-if(typeof module!=="undefined" && module.exports) module.exports={familleVoisine,platsProches,conflitsVariete,ordreSansConflitPossible,repartirPlats,remplacementVarie,etapeAffichee,formeCulinaire,famillePlat,complements,coutComplements,contientLegumineuses,RECETTES,ING,scorePlan,genererPlan,relancerRepas,listeCourses,nutrimentsRecette,bilanPlan,rnpHebdoFoyer,estExclue,poolDuMois,lundiDe,isoSemaine,cleSemaine,idsComplets,coursesManuelles,repasManuels,chargerPlan,chargerProfil,rendreTout,activerVue,tailleTexte,cycleTailleTexte,libelleTailleTexte,getProfil:()=>profil,setProfil:p=>{profil=p;},getPlan:()=>plan,setPlan:p=>{plan=p;},setSemaine:d=>{semaine=lundiDe(d);},nutrimentsV5Recette,recetteClassifiable,favoris,estFavori,basculerFavori,anneauPlat,anneauHtml,carteBilanV5,FAV_BONUS,FAV_CAP};
+if(typeof module!=="undefined" && module.exports) module.exports={familleVoisine,platsProches,conflitsVariete,ordreSansConflitPossible,repartirPlats,remplacementVarie,etapeAffichee,formeCulinaire,famillePlat,complements,coutComplements,contientLegumineuses,RECETTES,ING,scorePlan,genererPlan,relancerRepas,listeCourses,listeCoursesStructuree,texteListeCourses,cochesCourses,nutrimentsRecette,bilanPlan,rnpHebdoFoyer,estExclue,poolDuMois,lundiDe,isoSemaine,cleSemaine,idsComplets,coursesManuelles,repasManuels,chargerPlan,chargerProfil,rendreTout,activerVue,tailleTexte,cycleTailleTexte,libelleTailleTexte,getProfil:()=>profil,setProfil:p=>{profil=p;},getPlan:()=>plan,setPlan:p=>{plan=p;},setSemaine:d=>{semaine=lundiDe(d);},nutrimentsV5Recette,recetteClassifiable,favoris,estFavori,basculerFavori,anneauPlat,anneauHtml,carteBilanV5,FAV_BONUS,FAV_CAP};
 rendreTout();
 if (typeof navigator!=="undefined" && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 })();
