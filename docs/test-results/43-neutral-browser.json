@@ -1,0 +1,13 @@
+{
+  "favoriteDetail": true,
+  "persistence": true,
+  "focusPreserved": true,
+  "informativeOnly": true,
+  "imagesDecoded": true,
+  "widths": [
+    320,
+    390,
+    768
+  ],
+  "errors": []
+}

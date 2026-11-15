@@ -1,0 +1,54 @@
+{
+  "audits": [
+    {
+      "nom": "semaine",
+      "critiques": [],
+      "serieux": [],
+      "moderes": [],
+      "mineurs": []
+    },
+    {
+      "nom": "semaine-detail-ouvert",
+      "critiques": [],
+      "serieux": [],
+      "moderes": [],
+      "mineurs": []
+    },
+    {
+      "nom": "filtres-ouverts",
+      "critiques": [],
+      "serieux": [],
+      "moderes": [],
+      "mineurs": []
+    },
+    {
+      "nom": "bilan",
+      "critiques": [],
+      "serieux": [],
+      "moderes": [],
+      "mineurs": []
+    },
+    {
+      "nom": "courses",
+      "critiques": [],
+      "serieux": [],
+      "moderes": [],
+      "mineurs": []
+    },
+    {
+      "nom": "profil",
+      "critiques": [],
+      "serieux": [],
+      "moderes": [],
+      "mineurs": []
+    }
+  ],
+  "budgetReseau": {
+    "visuelsInitiaux": 4,
+    "octetsInitiaux": 270652,
+    "visuelsSemaine": 7,
+    "octetsSemaine": 487764,
+    "octetsJsCss": 952019
+  },
+  "jsErrors": []
+}
