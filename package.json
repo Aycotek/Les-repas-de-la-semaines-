@@ -4,7 +4,7 @@
   "private": true,
   "description": "Planificateur hebdomadaire statique, sans service externe à l'exécution",
   "scripts": {
-    "test": "node tests/run.js && node tests/extended.js && node tests/nutrition-v2.cjs && node tests/allergenes.cjs && node tests/diversite.cjs && node tests/essentiel.cjs && node tests/kcal-calc-guard.cjs && node tests/pesee-coherence.cjs && node tests/export-liste.cjs",
+    "test": "node tests/run.js && node tests/extended.js && node tests/nutrition-v2.cjs && node tests/allergenes.cjs && node tests/diversite.cjs && node tests/essentiel.cjs && node tests/kcal-calc-guard.cjs && node tests/pesee-coherence.cjs && node tests/export-liste.cjs && node tests/kcal-partielles.cjs",
     "test:browser": "node tests/browser.cjs",
     "test:essentiel-browser": "node tests/essentiel-browser.cjs",
     "test:security": "node tests/security.cjs",
