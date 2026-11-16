@@ -44,9 +44,9 @@ test('fruits de mer : type dédié, jamais comptés comme poisson',()=>{
   if(r.t==='fruits_mer'){assert.ok(aCoquille,'fruits_mer sans coquillages: '+r.i);}
  }
 });
-test('fruits de mer : aversion poisson épargne les coquillages, aversion fruits de mer les exclut',()=>{
+test('fruits de mer : aversion poisson couvre aussi les coquillages (attente filtre unique) ; aversion fruits de mer reste distincte',()=>{
  const e20=by.e20,t06=by.t06;
- assert.equal(a.estExclue(e20,['evite:poisson_gout']),false);
+ assert.equal(a.estExclue(e20,['evite:poisson_gout']),true); // « poisson » au quotidien inclut seiches, moules…
  assert.equal(a.estExclue(e20,['evite:fruits_de_mer']),true);
  assert.equal(a.estExclue(t06,['evite:poisson_gout']),true); // sauce de poisson = goût de poisson réel
 });
