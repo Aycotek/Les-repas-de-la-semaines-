@@ -7,7 +7,7 @@
 globalThis.ALLERGENES = [
   {id:"fruits_a_coque", nom:"Fruits à coque", ex:"noix, noisettes, amandes, pignons"},
   {id:"arachide", nom:"Arachides", ex:"cacahuètes"},
-  {id:"poisson", nom:"Poisson", ex:"y compris sauce de poisson, anchois"},
+  {id:"poisson", nom:"Poisson", ex:"y compris sauce de poisson, anchois ; écarte aussi crustacés et mollusques (crevettes, moules, seiche…) par prudence"},
   {id:"crustaces", nom:"Crustacés", ex:"crevettes, crabe"},
   {id:"mollusques", nom:"Mollusques", ex:"moules, calmars, poulpe"},
   {id:"lait", nom:"Lait", ex:"fromages, beurre, crème, yaourt"},
@@ -70,7 +70,7 @@ globalThis.EVITE=[
  {id:"agneau_veau",nom:"Veau et agneau",re:/^(veau|agneau|cote_agneau)/},
  {id:"volaille",nom:"Volaille",re:/^(poulet|filet_poulet|haut_de_cuisse|escalope_dinde|pintade|confit_canard|magret_canard)/},
  {id:"viande",nom:"Toute viande",re:/^(boeuf|veau|agneau|cote_agneau|porc_|jambon_|lardons|saucisse_|merguez|poulet|filet_poulet|haut_de_cuisse|escalope_dinde|pintade|confit_canard|magret_canard|lapin|poitrine_porc|poitrine_demi_sel|moelle)/},
- {id:"poisson_gout",nom:"Poisson (goût)",re:/^(cabillaud|colin|hareng|lieu_jaune|loup|maquereau|merlan|merlu|morue|raie|rouget|sardine|saumon|thon|truite|anchois|sauce_poisson|sauce_nuoc|sole)/},
+ {id:"poisson_gout",nom:"Poisson et fruits de mer (goût)",re:/^(cabillaud|colin|hareng|lieu_jaune|loup|maquereau|merlan|merlu|morue|raie|rouget|sardine|saumon|thon|truite|anchois|sauce_poisson|sauce_nuoc|sole|crabe|crevette|encornet|moule|poulpe|seiche|sauce_huitre|palourde|noix_saint_jacques)/},
  {id:"fruits_de_mer",nom:"Fruits de mer",re:/^(crabe|crevette|encornet|moule|poulpe|seiche|sauce_huitre|palourde|noix_saint_jacques)/},
  {id:"champignons",nom:"Champignons",re:/^(champignon|cepe|girolle)/},
  {id:"coriandre",nom:"Coriandre",re:/^coriandre/},

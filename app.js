@@ -366,7 +366,16 @@ function moisSemaine() { return semaine.getMonth() + 1; }
 /* ---------- État plan ---------- */
 function chargerPlan() {
   const brut = stockage.getItem("ns_plan_" + cleSemaine());
-  if (brut) { try { const p = JSON.parse(brut); if (Array.isArray(p) && p.length > 0 && p.length <= 7 && new Set(p).size === p.length && p.every(i => typeof i==="string" && RECETTE_PAR_ID[i] && !estExclue(RECETTE_PAR_ID[i],profil.exclusions))) return p; } catch (e) {} }
+  if (brut) { try { const p = JSON.parse(brut); if (Array.isArray(p) && p.length > 0 && p.length <= 7 && new Set(p).size === p.length && p.every(i => typeof i==="string" && RECETTE_PAR_ID[i])) {
+   if (p.every(i => !estExclue(RECETTE_PAR_ID[i], profil.exclusions))) return p;
+   // Plan sain sauf des plats devenus incompatibles avec les exclusions (ex. filtre corrigé) : remplacer uniquement
+   // ces plats et garder le reste de la semaine, plutôt que régénérer tout le menu. Si aucun remplaçant admissible
+   // n'existe, le plat est conservé et la carte affiche l'alerte « Ne convient plus à tes choix ».
+   let q = p.slice();
+   for (let idx = 0; idx < q.length; idx++) if (estExclue(RECETTE_PAR_ID[q[idx]], profil.exclusions)) q = relancerRepas(q, idx, moisSemaine(), hashStr(cleSemaine() + ":correctif:" + idx));
+   stockage.setItem("ns_plan_" + cleSemaine(), JSON.stringify(q));
+   return q;
+  } } catch (e) {} }
   const plan = genererPlan(moisSemaine(), hashStr(cleSemaine()));
   stockage.setItem("ns_plan_" + cleSemaine(), JSON.stringify(plan));
   return plan;
@@ -718,15 +727,19 @@ function estExclue(r, exclusions) {
   if (typeof p !== "string") return false;
   if (p.startsWith("allergen:")) { // allergie : prudence maximale, si la table des allergènes manque on exclut tout
    const AD = globalThis.allergenesDe; if (typeof AD !== "function") return true;
-   const x = AD(r.ing), id = p.slice(9); return x.c.includes(id) || x.p.includes(id);
+   const x = AD(r.ing), id = p.slice(9);
+   // « Poisson » écarte aussi mollusques et crustacés : attente usuelle d'un filtre « poisson » (une seiche ne doit pas passer).
+   // Ce ne sont PAS le même allergène ; c'est une sur-exclusion de prudence, jamais dangereuse, signalée dans le libellé.
+   const ids = id === "poisson" ? ["poisson", "mollusques", "crustaces"] : [id];
+   return ids.some(i => x.c.includes(i) || x.p.includes(i));
   }
   if (p.startsWith("evite:")) {
    const e = (globalThis.EVITE || []).find(e => e.id === p.slice(6)); if (!e) return false;
-   return r.ing.some(([k]) => e.re.test(k)) || (p === "evite:poisson_gout" && String(r.t).startsWith("poisson"));
+   return r.ing.some(([k]) => e.re.test(k)) || (p === "evite:poisson_gout" && (String(r.t).startsWith("poisson") || String(r.t) === "fruits_mer"));
   }
   if (p.startsWith("mot:")) return r.ing.some(([k]) => motCorrespond(p.slice(4), k));
   // ancien format : on compare des clés entières ou des préfixes de mot (jamais une sous-chaîne : « oeuf » ne doit pas toucher « boeuf »)
-  return r.ing.some(([k]) => p === "poisson" ? (String(r.t).startsWith("poisson") || (ING[k].rayon==="poissonnerie" && !/^(crabe|crevette|encornet|moule|poulpe|seiche)/.test(k))) : p.split("|").some(x=>k===x||k.startsWith(x+"_")));
+  return r.ing.some(([k]) => p === "poisson" ? (String(r.t).startsWith("poisson") || String(r.t) === "fruits_mer" || ING[k].rayon==="poissonnerie") : p.split("|").some(x=>k===x||k.startsWith(x+"_")));
  });
 }
 // Toutes saisons volontairement : la saisonnalité est favorisée dans scorePlan (bonus
