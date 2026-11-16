@@ -88,6 +88,9 @@ function nutrimentsRecette(r) {
   }
   return { t, manquants, absents };
 }
+// Calories par portion : jamais un total partiel quand une valeur d'ingrédient manque
+function kcalPortionCalculable(r) { return nutrimentsRecette(r).absents.kcal === 0; }
+function kcalPortionTexte(r) { const n = nutrimentsRecette(r); return n.absents.kcal > 0 ? "calories non calculables" : "~" + Math.round(n.t.kcal / 4) + " kcal/portion"; }
 /* Les rendements servent seulement à afficher le poids à acheter.
    Les quantités et prixKg du moteur restent exprimés en partie comestible.
    Sources et hypothèses : REVUE-CORRECTIONS.md, lot corrigé v4. */
@@ -479,7 +482,7 @@ function rendreSemaine() {
       <p class="jour">${dateDiner.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"short"})} · dîner</p>
       <p><button class="petit fav-detail" type="button" data-act="favori" data-recette="${id}" aria-pressed="${estFavori(id)}">${estFavori(id)?"★ Favori — retirer de mes favoris":"☆ Ajouter à mes favoris"}</button></p>
       <div class="puces-info"><span class="badge">${TYPE_LABEL[r.t] || r.t}</span>
-      <span class="badge ${long?"long":""}">${tps} min</span><span class="badge">~${Math.round(nutrimentsRecette(r).t.kcal/4)} kcal/portion</span><span class="badge">~${eur(coutRecette(r)*profil.portionsParRecette/4)}</span></div>
+      <span class="badge ${long?"long":""}">${tps} min</span><span class="badge">${kcalPortionTexte(r)}</span><span class="badge">~${eur(coutRecette(r)*profil.portionsParRecette/4)}</span></div>
       ${al.c.length ? `<p class="meta allerg">Contient : ${al.c.map(nomAl).join(", ")}</p>` : ""}
       <div class="meta">Prépa ${r.p} min · cuisson ${r.c} min · ${profil.portionsParRecette} portions au total · ${profil.portionsParRecette<profil.personnes.length?`Pas assez de portions pour un dîner complet de ${profil.personnes.length} personnes, sans compter les restes`:profil.portionsParRecette<2*profil.personnes.length?`Après un dîner de ${profil.personnes.length} portions, ${Math.max(0,profil.portionsParRecette-profil.personnes.length)} portion(s) restante(s) : pas assez pour le déjeuner de tout le foyer`:`restes : déjeuner du ${dateRestes.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"short"})}`}</div>
       ${manque.length ? `<div class="alternatives">Matériel manquant : ${manque.map(m => m + " → alternative : " + (ALT_MATERIEL[m] || "adapter")).join(" ; ")}</div>` : ""}
@@ -490,7 +493,7 @@ function rendreSemaine() {
         ${(al.c.length||al.p.length) ? `<p class="note"><strong>Allergènes (liste UE) :</strong> ${al.c.length?"contient "+al.c.map(nomAl).join(", "):"aucun certain"}${al.p.length?" · possible selon les marques (produits transformés, à vérifier sur l'étiquette) : "+al.p.map(nomAl).join(", "):""}. Traces et contamination croisée non couvertes.</p>` : `<p class="note">Aucun allergène UE identifié dans les ingrédients du catalogue (traces et produits industriels non vérifiables).</p>`}
         <h3>Ingrédients (${profil.portionsParRecette} portions)</h3>
         <ul>${r.ing.map(([k, g]) => { const ing = ING[k]; return ing ? `<li>${ing.nom} — ${esc(quantiteIngredient(k,g * profil.portionsParRecette / 4))}${ACHATS[k]?`<small class="note note-achat">${esc(noteAchat(k))}</small>`:""}</li>` : ""; }).join("")}</ul>
-        <p class="note">~${eur(coutRecette(r)*profil.portionsParRecette/4)} pour la recette · ~${Math.round(nutrimentsRecette(r).t.kcal/4)} kcal/portion (estimation, données partielles possibles). Ces valeurs ne prouvent pas que ce plat convient à un besoin médical.</p><p class="note">Correspondances CIQUAL approximatives ou absentes (non chiffrées si absentes) : ${r.ing.filter(([k])=>ING[k].correspondance!=="directe").map(([k])=>esc(ING[k].nom)).join(", ")||"aucune signalée"}. Les calculs utilisent les poids comestibles. Quand un rendement est indiqué, le poids à acheter avec os ou coquilles est affiché séparément. Rendements estimés et pertes de cuisson non modélisées ; certains produits entiers du catalogue restent approximatifs.</p><h3>Préparation</h3>
+        <p class="note">~${eur(coutRecette(r)*profil.portionsParRecette/4)} pour la recette · ${kcalPortionTexte(r)} (estimation, données partielles possibles). Ces valeurs ne prouvent pas que ce plat convient à un besoin médical.</p><p class="note">Correspondances CIQUAL approximatives ou absentes (non chiffrées si absentes) : ${r.ing.filter(([k])=>ING[k].correspondance!=="directe").map(([k])=>esc(ING[k].nom)).join(", ")||"aucune signalée"}. Les calculs utilisent les poids comestibles. Quand un rendement est indiqué, le poids à acheter avec os ou coquilles est affiché séparément. Rendements estimés et pertes de cuisson non modélisées ; certains produits entiers du catalogue restent approximatifs.</p><h3>Préparation</h3>
         <ul>${(r.et || []).map(e => `<li>${esc(etapeAffichee(r,e))}</li>`).join("")}</ul>
       </div>
       </div>
@@ -945,7 +948,7 @@ function carteBilanV5() {
     <p class="note">${calculables} plat(s) sur ${recettes.length} avec les huit valeurs de composition disponibles. Aucune somme partielle ne remplace une valeur non calculable. Les états cru/cuit et les correspondances entre ingrédients et aliments de référence restent des sources d'incertitude. Aucun seuil médical ni classement santé n'est appliqué ici.</p>${details}</div>`;
 }
 
-if(typeof module!=="undefined" && module.exports) module.exports={familleVoisine,platsProches,conflitsVariete,ordreSansConflitPossible,repartirPlats,remplacementVarie,etapeAffichee,formeCulinaire,famillePlat,complements,coutComplements,contientLegumineuses,RECETTES,ING,scorePlan,genererPlan,relancerRepas,listeCourses,listeCoursesStructuree,texteListeCourses,cochesCourses,nutrimentsRecette,bilanPlan,rnpHebdoFoyer,estExclue,poolDuMois,lundiDe,isoSemaine,cleSemaine,idsComplets,coursesManuelles,repasManuels,chargerPlan,chargerProfil,rendreTout,activerVue,tailleTexte,cycleTailleTexte,libelleTailleTexte,getProfil:()=>profil,setProfil:p=>{profil=p;},getPlan:()=>plan,setPlan:p=>{plan=p;},setSemaine:d=>{semaine=lundiDe(d);},nutrimentsV5Recette,recetteClassifiable,favoris,estFavori,basculerFavori,anneauPlat,anneauHtml,carteBilanV5,FAV_BONUS,FAV_CAP};
+if(typeof module!=="undefined" && module.exports) module.exports={kcalPortionTexte,kcalPortionCalculable,familleVoisine,platsProches,conflitsVariete,ordreSansConflitPossible,repartirPlats,remplacementVarie,etapeAffichee,formeCulinaire,famillePlat,complements,coutComplements,contientLegumineuses,RECETTES,ING,scorePlan,genererPlan,relancerRepas,listeCourses,listeCoursesStructuree,texteListeCourses,cochesCourses,nutrimentsRecette,bilanPlan,rnpHebdoFoyer,estExclue,poolDuMois,lundiDe,isoSemaine,cleSemaine,idsComplets,coursesManuelles,repasManuels,chargerPlan,chargerProfil,rendreTout,activerVue,tailleTexte,cycleTailleTexte,libelleTailleTexte,getProfil:()=>profil,setProfil:p=>{profil=p;},getPlan:()=>plan,setPlan:p=>{plan=p;},setSemaine:d=>{semaine=lundiDe(d);},nutrimentsV5Recette,recetteClassifiable,favoris,estFavori,basculerFavori,anneauPlat,anneauHtml,carteBilanV5,FAV_BONUS,FAV_CAP};
 rendreTout();
 if (typeof navigator!=="undefined" && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 })();
